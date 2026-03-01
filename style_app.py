@@ -117,16 +117,37 @@ if uploaded_file is not None:
                             label="📄 프리미엄 PDF 리포트 다운로드",
                             data=pdf_bytes,
                             file_name="Microhard_Style_Report.pdf",
-                            mime="application/pdf",
-                            key="premium_pdf_download"
-                        )
-                    except Exception as e:
-                        # 3. 실패 시 안내 메시지 (except가 없으면 에러가 납니다)
-                        st.warning("PDF 리포트 생성에 필요한 폰트(NanumGothic.ttf)를 확인해주세요.")
-                        st.error(f"상세 에러 내용: {e}")
-                    # --- 섹션 끝 ---
+                        # --- 4단계 결과 출력 ---
+                        st.subheader("📊 AI 스타일 리포트")
+                        st.markdown(response.text)
+                        st.balloons()
 
+                        # --- PDF 생성 함수 (이 위치에 그대로 두세요) ---
+                        def create_pdf_file(report_text):
+                            from fpdf import FPDF
+                            pdf = FPDF()
+                            pdf.add_page()
+                            try:
+                                pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                                pdf.set_font('Nanum', '', 14)
+                            except:
+                                pdf.set_font("Arial", size=12)
+                            pdf.multi_cell(0, 10, txt=report_text)
+                            return pdf.output()
 
+                        # --- 프리미엄 PDF 다운로드 섹션 ---
+                        st.divider()
+                        st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
 
-
-
+                        # 에러 방지용 한 묶음 코드 (줄 맞춤 절대 주의!)
+                        try:
+                            pdf_out = create_pdf_file(response.text)
+                            st.download_button(
+                                label="📄 프리미엄 PDF 리포트 다운로드",
+                                data=pdf_out,
+                                file_name="Microhard_Style_Report.pdf",
+                                mime="application/pdf",
+                                key="btn_premium_pdf"
+                            )
+                        except Exception as e:
+                            st.error(f"PDF 생성 준비 중: {e}")
