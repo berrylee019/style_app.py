@@ -106,48 +106,43 @@ if uploaded_file is not None:
                     st.divider()
                     st.subheader("💎 프리미엄 서비스")
                     st.info("전문적인 분석 결과가 담긴 PDF 리포트를 소장하세요.")
+                    
+                    # --- 4단계 결과 출력 ---
+                    st.subheader("📊 AI 스타일 리포트")
+                    st.markdown(response.text)
+                    st.balloons()
 
-                    # 에러 방지를 위해 하나로 묶인 try-except 블록
-                    try:
-                        # 1. PDF 데이터 생성 시도
-                        pdf_bytes = create_pdf(response.text)
+                    # --- PDF 생성 함수 정의 ---
+                    def create_pdf_file(report_text):
+                        from fpdf import FPDF
+                        pdf = FPDF()
+                        pdf.add_page()
+                        try:
+                            # 폰트 파일이 같은 폴더에 있어야 한글이 나옵니다
+                            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                            pdf.set_font('Nanum', '', 14)
+                        except Exception:
+                            # 폰트가 없으면 기본 영문 폰트로 대체
+                            pdf.set_font("Arial", size=12)
             
-                        # 2. 성공 시 다운로드 버튼 표시
+                        pdf.multi_cell(0, 10, txt=report_text)
+                        return pdf.output()
+
+                    # --- 프리미엄 PDF 다운로드 섹션 ---
+                    st.divider()
+                    st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
+
+                    try:
+                        # PDF 데이터 생성
+                        pdf_out = create_pdf_file(response.text)
+            
+                        # 다운로드 버튼 (모든 괄호가 정확히 닫혀 있는지 확인 완료!)
                         st.download_button(
                             label="📄 프리미엄 PDF 리포트 다운로드",
-                            data=pdf_bytes,
+                            data=pdf_out,
                             file_name="Microhard_Style_Report.pdf",
-                        # --- 4단계 결과 출력 ---
-                        st.subheader("📊 AI 스타일 리포트")
-                        st.markdown(response.text)
-                        st.balloons()
-
-                        # --- PDF 생성 함수 (이 위치에 그대로 두세요) ---
-                        def create_pdf_file(report_text):
-                            from fpdf import FPDF
-                            pdf = FPDF()
-                            pdf.add_page()
-                            try:
-                                pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                                pdf.set_font('Nanum', '', 14)
-                            except:
-                                pdf.set_font("Arial", size=12)
-                            pdf.multi_cell(0, 10, txt=report_text)
-                            return pdf.output()
-
-                        # --- 프리미엄 PDF 다운로드 섹션 ---
-                        st.divider()
-                        st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-
-                        # 에러 방지용 한 묶음 코드 (줄 맞춤 절대 주의!)
-                        try:
-                            pdf_out = create_pdf_file(response.text)
-                            st.download_button(
-                                label="📄 프리미엄 PDF 리포트 다운로드",
-                                data=pdf_out,
-                                file_name="Microhard_Style_Report.pdf",
-                                mime="application/pdf",
-                                key="btn_premium_pdf"
-                            )
-                        except Exception as e:
-                            st.error(f"PDF 생성 준비 중: {e}")
+                            mime="application/pdf",
+                            key="btn_premium_pdf"
+                        )
+                    except Exception as e:
+                        st.error(f"PDF 생성 중 오류 발생: {e}")
