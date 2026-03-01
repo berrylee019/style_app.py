@@ -73,45 +73,52 @@ if uploaded_file is not None:
                     from fpdf import FPDF
                     import base64
 
-                    def create_pdf(text):
-            from fpdf import FPDF
+                    # 4단계 결과 출력 아래에 아래 내용을 붙여넣으세요
+                    st.markdown(response.text) 
+                    st.balloons()
+        
+                    # --- PDF 생성 함수 (들여쓰기 주의!) ---
+                    def create_pdf(text_content):
+                        from fpdf import FPDF
+                        pdf = FPDF()
+                        pdf.add_page()
             
-            # 1. PDF 객체 생성 (유니코드 지원을 위해 'UTF-8'과 유사한 처리 가능하게 설정)
-            pdf = FPDF()
-            pdf.add_page()
-            
-            # 2. 폰트 등록 (파일이 같은 경로에 있어야 함)
-            # 'Nanum'은 별명, 'NanumGothic.ttf'는 실제 파일명입니다.
-            try:
-                pdf.add_font('Nanum', '', 'NanumGothic.ttf', unicode=True)
-                pdf.set_font('Nanum', '', 16)
-            except:
-                # 폰트 파일이 없을 경우를 대비한 비상용 설정
-                pdf.set_font("Arial", 'B', 16)
+                        # 폰트 설정 (폰트 파일이 폴더에 있어야 함)
+                        try:
+                            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                            pdf.set_font('Nanum', '', 16)
+                        except:
+                            pdf.set_font("Arial", 'B', 16)
 
-            # 3. 제목 작성
-            pdf.cell(200, 10, txt="Microhard AI Style Report", ln=True, align='C')
-            pdf.ln(10)
+                        pdf.cell(200, 10, txt="Microhard AI Style Report", ln=True, align='C')
+                        pdf.ln(10)
             
-            # 4. 본문 작성 (폰트 크기 조절)
-            try:
-                pdf.set_font('Nanum', '', 11)
-            except:
-                pdf.set_font("Arial", size=10)
+                        try:
+                            pdf.set_font('Nanum', '', 11)
+                        except:
+                            pdf.set_font("Arial", size=10)
 
-            # 5. 한글 깨짐 방지를 위해 multi_cell 사용
-            # AI 답변(text)을 그대로 넣어도 unicode=True 설정 덕분에 잘 나옵니다.
-            pdf.multi_cell(0, 10, txt=text)
-            
-            # 출력을 바이트로 변환 (latin-1 인코딩 없이 그대로 내보냅니다)
-            return pdf.output(dest='S')
-                    status_text.success("✅ 모든 분석이 완료되었습니다!")
-                else:
-                    st.write("AI가 답변을 생성하지 못했습니다. (안전 필터 작동 가능성)")
-                
-            except Exception as e:
-                st.error(f"리포트 생성 중 오류 발생: {e}")
-                # 만약 여기서 막힌다면 Streamlit 로그(Manage app -> Logs)를 확인해야 합니다.
+                        # 한글 출력을 위해 multi_cell 사용
+                        pdf.multi_cell(0, 10, txt=text_content)
+                        return pdf.output()
+
+                    # --- 다운로드 버튼 섹션 ---
+                    st.divider()
+                    st.subheader("💎 프리미엄 서비스")
+                    st.info("전문적인 분석 결과가 담긴 PDF 리포트를 소장하세요.")
+        
+                    try:
+                        pdf_bytes = create_pdf(response.text)
+                        st.download_button(
+                            label="📄 프리미엄 PDF 리포트 다운로드",
+                            data=pdf_bytes,
+                            file_name="Microhard_Style_Report.pdf",
+                            mime="application/pdf"
+                        )
+                    except Exception as e:
+                        st.warning("PDF를 생성하려면 NanumGothic.ttf 파일이 필요합니다.")
+                        # st.write(f"에러 상세: {e}") # 디버깅용
+
 
 
 
