@@ -69,19 +69,19 @@ if uploaded_file is not None:
             st.markdown(st.session_state.analysis_result)
             st.balloons()
 
-            # --- 73번 줄: PDF 생성 기계 (공간 부족 에러 해결 버전) ---
+            # --- 73번 줄: PDF 생성 기계 (격식 & 레이아웃 최적화 버전) ---
             def create_pdf_file(text_content):
                 from fpdf import FPDF
                 from datetime import datetime
                 import re
 
-                # 1. PDF 객체 생성 및 기본 설정
-                # orientation='P' (세로), unit='mm' (밀리미터), format='A4'
+                # A4 규격(210x297mm), 여백 20mm 설정
                 pdf = FPDF(orientation='P', unit='mm', format='A4')
-                pdf.set_auto_page_break(auto=True, margin=15) # 여백 넉넉히!
+                pdf.set_margins(left=20, top=20, right=20)
+                pdf.set_auto_page_break(auto=True, margin=20)
                 pdf.add_page()
                 
-                # 2. 폰트 설정
+                # 1. 폰트 설정
                 try:
                     pdf.add_font('Nanum', '', 'NanumGothic.ttf')
                     pdf.set_font('Nanum', '', 12)
@@ -90,54 +90,61 @@ if uploaded_file is not None:
                     pdf.set_font("Arial", size=11)
                     is_korean_available = False
 
-                # 3. 헤더 (너비를 0 대신 190mm로 고정해서 에러 방지!)
-                pdf.set_text_color(40, 40, 40)
-                pdf.cell(190, 10, "MICROHARD AI STYLE PREMIUM REPORT", ln=True, align='C')
-                pdf.set_font("Arial", size=8)
-                pdf.cell(190, 5, f"Issued Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
+                # 2. 헤더 (고객용 격식 타이틀)
+                pdf.set_text_color(50, 50, 50)
+                pdf.set_font("Arial", 'B', 16)
+                pdf.cell(170, 15, "AI STYLE PREMIUM ANALYSIS REPORT", ln=True, align='C')
+                
+                pdf.set_font("Arial", size=9)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(170, 5, f"Report ID: {datetime.now().strftime('%Y%m%d%H%M%S')}", ln=True, align='C')
                 pdf.ln(10)
 
-                # 4. 본문 내용 정리
+                # 3. 본문 텍스트 정리
                 if is_korean_available:
-                    clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
                     pdf.set_font('Nanum', '', 11)
+                    clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
                 else:
-                    # 한글 폰트 없을 때 ASCII 문자만 남기기
-                    clean_text = re.sub(r'[^\x00-\x7F]+', ' ', text_content)
                     pdf.set_font("Arial", size=11)
+                    # 한글 폰트 없을 시 영문/숫자 외 제거 (에러 방지)
+                    clean_text = re.sub(r'[^\x00-\x7F]+', ' ', text_content)
 
-                # 5. 본문 출력 (너비를 190으로 딱 고정했슈!)
+                # 4. 본문 출력 (너비를 170mm로 고정하여 종이 밖 이탈 방지)
+                pdf.set_text_color(0, 0, 0)
                 for line in clean_text.split('\n'):
-                    if line.strip():
-                        # multi_cell의 첫 인자를 190으로 주면 공간 부족 에러가 안 납니다요!
-                        pdf.multi_cell(190, 8, txt=line.strip())
+                    line = line.strip()
+                    if line:
+                        # 한 줄의 높이를 7mm로 설정하여 가독성 확보
+                        pdf.multi_cell(170, 7, txt=line)
                 
-                # 6. 푸터
-                pdf.ln(20)
-                pdf.set_font("Arial", size=9)
-                pdf.set_text_color(150, 150, 150)
-                pdf.cell(190, 10, "© 2026 Microhard Style Solution. All Rights Reserved.", align='C')
+                # 5. 하단 저작권 표시
+                pdf.ln(10)
+                pdf.set_font("Arial", size=8)
+                pdf.set_text_color(180, 180, 180)
+                pdf.cell(170, 10, "Copyright 2026. Microhard All rights reserved.", align='C')
                 
                 return pdf.output(dest='S')
 
-            # --- 5. 수익화 섹션 (비밀번호 로직) ---
+            # --- 5. 수익화 섹션 (고객용 정중한 문구로 수정) ---
             st.divider()
-            st.subheader("💎 프리미엄 PDF 리포트 소장하기")
+            st.subheader("💎 프리미엄 리포트 다운로드")
+            st.write("본 리포트에는 고객님의 체형과 스타일에 최적화된 심층 분석 데이터가 포함되어 있습니다.")
             
             col1, col2 = st.columns(2)
             with col1:
-                st.write("✅ **리포트 가격: 9,900원**")
-                # 형님 오픈채팅 링크로 바꾸셔요!
-                st.link_button("💰 입금 및 비번 문의", "https://open.kakao.com/o/your_link") 
+                st.markdown("#### **서비스 안내**")
+                st.write("- **판매 가격:** 9,900원")
+                st.link_button("💳 입금 확인 및 비밀번호 문의", "https://open.kakao.com/o/your_link") 
             
             with col2:
-                input_pw = st.text_input("열람 비밀번호 입력", type="password", key="premium_pw")
+                input_pw = st.text_input("비밀번호를 입력해 주세요.", type="password", key="premium_pw")
 
-            # 비밀번호 검증 및 다운로드 버튼
+            # 비밀번호 검증 섹션
             if input_pw == "style77":
                 try:
+                    # [풍선 방지] 다운로드 버튼 생성 시에는 balloons()를 호출하지 않습니다.
                     pdf_data = create_pdf_file(st.session_state.analysis_result)
-                    st.success("🔓 인증 성공! 아래 버튼을 눌러주십쇼 형님!")
+                    st.success("✅ 인증되었습니다. 아래 버튼을 클릭하여 리포트를 저장하십시오.")
                     st.download_button(
                         label="📄 프리미엄 PDF 리포트 다운로드",
                         data=bytes(pdf_data),
@@ -146,11 +153,9 @@ if uploaded_file is not None:
                         key="dl_button_final"
                     )
                 except Exception as e:
-                    st.error(f"리포트 생성 중 오류 발생: {e}")
+                    st.error(f"리포트 생성 중 오류가 발생했습니다: {e}")
             elif input_pw != "":
-                st.warning("❌ 비밀번호가 틀렸습니다요!")
-
-
+                st.warning("⚠️ 입력하신 비밀번호가 일치하지 않습니다.")
 
 
 
