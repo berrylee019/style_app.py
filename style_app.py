@@ -102,27 +102,30 @@ if uploaded_file is not None:
                         pdf.multi_cell(0, 10, txt=text_content)
                         return pdf.output()
 
-                    # --- 다운로드 버튼 섹션 ---
+                    # --- PDF 생성 및 다운로드 섹션 시작 ---
                     st.divider()
                     st.subheader("💎 프리미엄 서비스")
                     st.info("전문적인 분석 결과가 담긴 PDF 리포트를 소장하세요.")
-        
+
+                    # 에러 방지를 위해 하나로 묶인 try-except 블록
                     try:
-                        # PDF 생성 시도
+                        # 1. PDF 데이터 생성 시도
                         pdf_bytes = create_pdf(response.text)
             
-                        # 성공 시 다운로드 버튼 표시
+                        # 2. 성공 시 다운로드 버튼 표시
                         st.download_button(
                             label="📄 프리미엄 PDF 리포트 다운로드",
                             data=pdf_bytes,
                             file_name="Microhard_Style_Report.pdf",
                             mime="application/pdf",
-                            key="pdf_download_btn"
+                            key="premium_pdf_download"
                         )
                     except Exception as e:
-                        # 에러 발생 시(예: 폰트 파일 없음 등) 사용자에게 안내
-                        st.warning("현재 PDF 리포트를 생성할 수 없습니다. NanumGothic.ttf 파일 확인이 필요합니다.")
-                        st.error(f"에러 내용: {e}")
+                        # 3. 실패 시 안내 메시지 (except가 없으면 에러가 납니다)
+                        st.warning("PDF 리포트 생성에 필요한 폰트(NanumGothic.ttf)를 확인해주세요.")
+                        st.error(f"상세 에러 내용: {e}")
+                    # --- 섹션 끝 ---
+
 
 
 
