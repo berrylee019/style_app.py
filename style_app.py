@@ -93,37 +93,30 @@ if uploaded_file is not None:
     
                     # --- PDF 생성 함수 (불필요한 encode 제거) ---
                     # --- [프리미엄 버전] PDF 생성 함수 ---
+                # --- 1. PDF 생성 기계 (고급형) ---
                 def create_pdf_file(text_content):
                     from fpdf import FPDF
                     from datetime import datetime
-
                     pdf = FPDF()
                     pdf.add_page()
-                    
-                    # 1. 폰트 설정 (나눔고딕 파일이 있어야 한글이 나옵니다요!)
                     try:
                         pdf.add_font('Nanum', '', 'NanumGothic.ttf')
                         pdf.set_font('Nanum', '', 12)
                     except:
                         pdf.set_font("Arial", size=11)
 
-                    # 2. 헤더: 프리미엄 타이틀 (비싸 보이게!)
-                    pdf.set_text_color(40, 40, 40) # 짙은 회색
+                    # 헤더: 프리미엄 타이틀
+                    pdf.set_text_color(40, 40, 40)
                     pdf.cell(0, 10, "MICROHARD AI STYLE PREMIUM REPORT", ln=True, align='C')
-                    
-                    # 발행 일자 넣기
                     pdf.set_font("Arial", size=8)
                     pdf.cell(0, 5, f"Issued Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
-                    pdf.ln(10) # 한 줄 띄우기
+                    pdf.ln(10)
 
-                    # 3. 본문: AI 답변 정리해서 넣기
+                    # 본문 내용
                     pdf.set_font('Nanum', '', 11) if 'Nanum' in pdf.fonts else pdf.set_font("Arial", size=11)
-                    
-                    # 특수문자 에러 방지 및 줄바꿈 처리
                     clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
                     for line in clean_text.split('\n'):
                         if line.strip():
-                            # 제목(#으로 시작하는 줄)은 조금 더 크게!
                             if line.startswith('#'):
                                 pdf.set_font('Nanum', '', 13) if 'Nanum' in pdf.fonts else pdf.set_font("Arial", size=13)
                                 pdf.multi_cell(0, 10, txt=line.replace('#', '').strip())
@@ -131,29 +124,40 @@ if uploaded_file is not None:
                             else:
                                 pdf.multi_cell(0, 8, txt=line)
                     
-                    # 4. 푸터: 저작권 표시 (전문가 느낌 물씬!)
                     pdf.ln(20)
                     pdf.set_font("Arial", size=9)
                     pdf.set_text_color(150, 150, 150)
                     pdf.cell(0, 10, "© 2026 Microhard Style Solution. All Rights Reserved.", align='C')
-                    
                     return pdf.output(dest='S')
-    
-                    st.divider()
-                    st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-    
-                    # 3. PDF 데이터 생성 및 버튼 배치
+
+                # --- 2. 수익화 섹션 (화면에 보이는 부분) ---
+                st.divider()
+                st.subheader("💎 프리미엄 PDF 리포트 소장하기")
+                st.info("AI의 정밀 분석 결과를 소장용 PDF 리포트로 받아보세요.")
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("✅ **리포트 가격: 9,900원**")
+                    # 형님 오픈채팅 링크로 바꾸셔요!
+                    st.link_button("💰 입금 및 비번 문의", "https://open.kakao.com/o/your_link") 
+                
+                with col2:
+                    # 입금 확인 후 알려줄 비밀번호 (예: style77)
+                    input_pw = st.text_input("열람 비밀번호 입력", type="password")
+
+                # --- 3. 비번이 맞을 때만 다운로드 버튼 등장! ---
+                if input_pw == "style77": # <-- 형님이 원하시는 비번으로 고치셔요!
                     try:
                         pdf_data = create_pdf_file(result.text)
+                        st.success("🔓 인증 성공! 아래 버튼을 눌러주십쇼 형님!")
                         st.download_button(
                             label="📄 프리미엄 PDF 리포트 다운로드",
-                            data=bytes(pdf_data), # 안전하게 바이트로 형변환
-                            file_name="Style_Report.pdf",
+                            data=bytes(pdf_data),
+                            file_name="Style_Premium_Report.pdf",
                             mime="application/pdf",
-                            key="final_pdf_button_v3"
+                            key="final_premium_button"
                         )
                     except Exception as e:
-                        st.error(f"PDF 파일 준비 중 오류가 발생했습니다: {e}")
-
-
-
+                        st.error(f"리포트 생성 중 오류가 났구먼유: {e}")
+                elif input_pw != "":
+                    st.warning("❌ 비밀번호가 틀렸습니다요. 입금을 확인해주셔요!")
