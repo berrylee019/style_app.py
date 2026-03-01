@@ -92,23 +92,52 @@ if uploaded_file is not None:
                     st.balloons()
     
                     # --- PDF 생성 함수 (불필요한 encode 제거) ---
-                    def create_pdf_file(text_content):
-                        from fpdf import FPDF
-                        pdf = FPDF()
-                        pdf.add_page()
-                        try:
-                            # NanumGothic.ttf 파일이 저장소에 있어야 합니다
-                            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                            pdf.set_font('Nanum', '', 14)
-                        except:
-                            pdf.set_font("Arial", size=12)
-                        
-                        # 텍스트 정리 (특수문자 에러 방지)
-                        clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
-                        pdf.multi_cell(0, 10, txt=clean_text)
-                        
-                        # [수정] output(dest='S')는 이미 바이트 형태이므로 encode가 필요 없습니다.
-                        return pdf.output(dest='S')
+                    # --- [프리미엄 버전] PDF 생성 함수 ---
+                def create_pdf_file(text_content):
+                    from fpdf import FPDF
+                    from datetime import datetime
+
+                    pdf = FPDF()
+                    pdf.add_page()
+                    
+                    # 1. 폰트 설정 (나눔고딕 파일이 있어야 한글이 나옵니다요!)
+                    try:
+                        pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                        pdf.set_font('Nanum', '', 12)
+                    except:
+                        pdf.set_font("Arial", size=11)
+
+                    # 2. 헤더: 프리미엄 타이틀 (비싸 보이게!)
+                    pdf.set_text_color(40, 40, 40) # 짙은 회색
+                    pdf.cell(0, 10, "MICROHARD AI STYLE PREMIUM REPORT", ln=True, align='C')
+                    
+                    # 발행 일자 넣기
+                    pdf.set_font("Arial", size=8)
+                    pdf.cell(0, 5, f"Issued Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
+                    pdf.ln(10) # 한 줄 띄우기
+
+                    # 3. 본문: AI 답변 정리해서 넣기
+                    pdf.set_font('Nanum', '', 11) if 'Nanum' in pdf.fonts else pdf.set_font("Arial", size=11)
+                    
+                    # 특수문자 에러 방지 및 줄바꿈 처리
+                    clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
+                    for line in clean_text.split('\n'):
+                        if line.strip():
+                            # 제목(#으로 시작하는 줄)은 조금 더 크게!
+                            if line.startswith('#'):
+                                pdf.set_font('Nanum', '', 13) if 'Nanum' in pdf.fonts else pdf.set_font("Arial", size=13)
+                                pdf.multi_cell(0, 10, txt=line.replace('#', '').strip())
+                                pdf.set_font('Nanum', '', 11) if 'Nanum' in pdf.fonts else pdf.set_font("Arial", size=11)
+                            else:
+                                pdf.multi_cell(0, 8, txt=line)
+                    
+                    # 4. 푸터: 저작권 표시 (전문가 느낌 물씬!)
+                    pdf.ln(20)
+                    pdf.set_font("Arial", size=9)
+                    pdf.set_text_color(150, 150, 150)
+                    pdf.cell(0, 10, "© 2026 Microhard Style Solution. All Rights Reserved.", align='C')
+                    
+                    return pdf.output(dest='S')
     
                     st.divider()
                     st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
@@ -125,5 +154,6 @@ if uploaded_file is not None:
                         )
                     except Exception as e:
                         st.error(f"PDF 파일 준비 중 오류가 발생했습니다: {e}")
+
 
 
