@@ -120,34 +120,31 @@ if uploaded_file is not None:
                 return pdf.output(dest='S')
 
             # --- 여기서부터 화면에 버튼을 그리는 코드입니다요! (사라졌던 부분) ---
-            st.divider()
-            st.subheader("💎 프리미엄 리포트 다운로드")
-            st.write("본 리포트에는 고객님의 체형과 스타일에 최적화된 심층 분석 데이터가 포함되어 있습니다.")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("#### **서비스 안내**")
-                st.write("- **판매 가격:** 9,900원")
-                # 형님 오픈채팅 링크로 꼭 바꾸셔요!
-                st.link_button("💳 입금 확인 및 비밀번호 문의", "https://open.kakao.com/o/your_link") 
-            
-            with col2:
-                # 비밀번호 입력창 (key값을 다르게 줘서 꼬임 방지!)
-                input_pw = st.text_input("비밀번호를 입력해 주세요.", type="password", key="final_premium_pw")
+            # --- 123번 줄부터 아래처럼 '#'을 붙여서 숨겨버립시다! ---
 
-            # 비밀번호 검증 후 다운로드 버튼 등장!
-            if input_pw == "style77":
-                try:
-                    pdf_data = create_pdf_file(st.session_state.analysis_result)
-                    st.success("✅ 인증되었습니다. 아래 버튼을 클릭하여 리포트를 저장하십시오.")
-                    st.download_button(
-                        label="📄 프리미엄 PDF 리포트 다운로드",
-                        data=bytes(pdf_data),
-                        file_name="Style_Premium_Report.pdf",
-                        mime="application/pdf",
-                        key="last_dl_button"
-                    )
-                except Exception as e:
-                    st.error(f"리포트 생성 중 오류가 발생했습니다: {e}")
-            elif input_pw != "":
-                st.warning("⚠️ 입력하신 비밀번호가 일치하지 않습니다.")
+            # st.divider()
+            # st.subheader("💎 프리미엄 리포트 다운로드")
+            # st.write("본 리포트에는 고객님의 체형과 스타일에 최적화된 심층 분석 데이터가 포함되어 있습니다.")
+            
+            # col1, col2 = st.columns(2)
+            # with col1:
+            #     st.markdown("#### **서비스 안내**")
+            #     st.write("- **판매 가격:** 9,900원")
+            #     st.link_button("💳 입금 확인 및 비밀번호 문의", "https://open.kakao.com/o/your_link") 
+            
+            # with col2:
+            #     input_pw = st.text_input("비밀번호를 입력해 주세요.", type="password", key="final_premium_pw")
+
+            # if input_pw == "style77":
+            #     try:
+            #         pdf_data = create_pdf_file(st.session_state.analysis_result)
+            #         st.success("✅ 인증되었습니다. 아래 버튼을 클릭하여 리포트를 저장하십시오.")
+            #         st.download_button(
+            #             label="📄 프리미엄 PDF 리포트 다운로드",
+            #             data=bytes(pdf_data),
+            #             file_name="Style_Premium_Report.pdf",
+            #             mime="application/pdf",
+            #             key="last_dl_button"
+            #         )
+            #     except Exception as e:
+            #         st.error(f"리포트 생성 중 오류가 발생했습니다: {e}")
