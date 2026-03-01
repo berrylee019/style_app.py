@@ -51,6 +51,29 @@ if uploaded_file is not None:
                 st.error("영상 처리가 너무 오래 걸립니다. 다시 시도해 주세요.")
                 st.stop()
 
+            # 4단계: 최종 리포트 생성 (가시성 강화)
+            status_text.info("4단계: 스타일리스트가 영상을 다 봤습니다! 이제 리포트를 작성합니다... 📝")
+        
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            prompt = "너는 세계적인 패션 스타일리스트야. 영상 속 인물의 스타일을 분석하고, 1. 전반적인 룩의 특징 2. 어울리는 액세서리 추천 3. 개선할 점을 전문적으로 알려줘."
+
+            try:
+                # AI에게 답변 요청
+                response = model.generate_content([video_file, prompt])
+            
+                # 결과 출력
+                st.subheader("📊 AI 스타일 리포트")
+                if response.text:
+                    st.markdown(response.text) # 리포트를 예쁘게 출력
+                    status_text.success("✅ 모든 분석이 완료되었습니다!")
+                else:
+                    st.write("AI가 답변을 생성하지 못했습니다. (안전 필터 작동 가능성)")
+                
+            except Exception as e:
+                st.error(f"리포트 생성 중 오류 발생: {e}")
+                # 만약 여기서 막힌다면 Streamlit 로그(Manage app -> Logs)를 확인해야 합니다.
+
+
 
 
 
