@@ -54,12 +54,9 @@ if uploaded_file is not None:
             model = genai.GenerativeModel("gemini-1.5-flash") # 또는 2.0-flash
 
             # 안전 장치: 프롬프트를 더 명확하게
-            prompt = "영상 속 인물의 패션을 분석해서 1.스타일 테마 2.추천 아이템을 한국어로 친절하게 알려줘."
+            prompt = "너는 세계적인 패션 스타일리스트야. 이 영상 속 인물의 스타일을 분석하고, 1. 전반적인 룩의 특징 2. 어울리는 액세서리 추천 3. 개선할 점을 전문적으로 알려줘."
             response = model.generate_content([
-                video_file, prompt
-                "너는 세계적인 패션 스타일리스트야. 이 영상 속 인물의 스타일을 분석하고, "
-                "1. 전반적인 룩의 특징 2. 어울리는 액세서리 추천 3. 개선할 점을 전문적으로 알려줘."
-            ])
+                video_file, prompt])
             
             st.subheader("📊 AI 스타일 리포트")
             if response.text:
@@ -67,4 +64,5 @@ if uploaded_file is not None:
             status_text.empty() # 진행 상황 메시지 삭제
         else:
             st.write("분석 결과가 비어 있습니다. 다른 영상으로 시도해 보세요.")
+
 
