@@ -97,45 +97,37 @@ if uploaded_file is not None:
                             pdf.set_font('Nanum', '', 11)
                         except:
                             pdf.set_font("Arial", size=10)
-
                         # --- 4단계 결과 출력 ---
                         st.subheader("📊 AI 스타일 리포트")
-                        if response.text:
-                            st.markdown(response.text)
-                            st.balloons()
+                        st.markdown(response.text)
+                        st.balloons()
 
-                            # --- PDF 생성 함수 정의 ---
-                            def create_pdf_file(report_text):
-                                from fpdf import FPDF
-                                pdf = FPDF()
-                                pdf.add_page()
-                                try:
-                                    # NanumGothic.ttf 파일이 저장소에 있어야 합니다
-                                    pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                                    pdf.set_font('Nanum', '', 14)
-                                except:
-                                    pdf.set_font("Arial", size=12)
-                
-                                pdf.multi_cell(0, 10, txt=report_text)
-                                return pdf.output()
-
-                            # --- 프리미엄 PDF 다운로드 섹션 ---
-                            st.divider()
-                            st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-
+                        # --- PDF 생성 및 다운로드 (가장 안전한 구조) ---
+                        def create_pdf_simple(text_data):
+                            from fpdf import FPDF
+                            pdf = FPDF()
+                            pdf.add_page()
                             try:
-                                # PDF 데이터 생성
-                                pdf_out = create_pdf_file(response.text)
-                
-                                # 다운로드 버튼
-                                st.download_button(
-                                    label="📄 프리미엄 PDF 리포트 다운로드",
-                                    data=pdf_out,
-                                    file_name="Microhard_Style_Report.pdf",
-                                    mime="application/pdf",
-                                    key="btn_premium_pdf"
-                                )
-                            except Exception as e:
-                                st.error(f"PDF 준비 중 오류가 발생했습니다: {e}")
-                        else:
-                            st.error("리포트 생성에 실패했습니다. 다시 시도해주세요.")
+                                # NanumGothic.ttf 파일이 저장소에 있어야 합니다
+                                pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                                pdf.set_font('Nanum', '', 14)
+                            except:
+                                pdf.set_font("Arial", size=12)
+            
+                            pdf.multi_cell(0, 10, txt=text_data)
+                            return pdf.output()
+
+                        st.divider()
+                        st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
+
+                        # PDF 생성 및 버튼 표시 (에러 방지형)
+                        pdf_content = create_pdf_simple(response.text)
+        
+                        if pdf_content:
+                            st.download_button(
+                            label="📄 프리미엄 PDF 리포트 다운로드",
+                            data=pdf_content,
+                            file_name="Microhard_Style_Report.pdf",
+                            mime="application/pdf",
+                            key="unique_pdf_download_key"
+                        )
