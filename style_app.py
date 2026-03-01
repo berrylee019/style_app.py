@@ -64,72 +64,36 @@ if uploaded_file is not None:
                 # 결과 출력
                 st.subheader("📊 AI 스타일 리포트")
                 if response.text:
-                    # 기존의 st.write나 st.markdown 줄을 아래 내용으로 교체
-                    st.balloons() # 분석 성공 축하 풍선! 🎈
-                    st.success("✅ Microhard AI 스타일리스트가 분석을 마쳤습니다!")
-                    st.markdown(response.text) # 리포트 본문 출력
-
-                    # --- PDF 리포트 생성 섹션 ---
-                    from fpdf import FPDF
-                    import base64
-
-                    # 4단계 결과 출력 아래에 아래 내용을 붙여넣으세요
-                    st.markdown(response.text) 
-                    st.balloons()
-        
-                    # --- PDF 생성 함수 (들여쓰기 주의!) ---
-                    def create_pdf(text_content):
-                        from fpdf import FPDF
-                        pdf = FPDF()
-                        pdf.add_page()
+            # --- 4단계 결과 출력 ---
+            st.subheader("📊 AI 스타일 리포트")
+            st.markdown(response.text)
+            st.balloons()
+    
+            # --- PDF 생성 함수 ---
+            def create_pdf_simple(text_data):
+                from fpdf import FPDF
+                pdf = FPDF()
+                pdf.add_page()
+                try:
+                    # 폰트 파일이 같은 폴더에 있어야 한글이 나옵니다
+                    pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                    pdf.set_font('Nanum', '', 14)
+                except:
+                    pdf.set_font("Arial", size=12)
+                
+                pdf.multi_cell(0, 10, txt=text_data)
+                return pdf.output()
+    
+            st.divider()
+            st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
+    
+            # PDF 생성 및 버튼 표시
+            pdf_content = create_pdf_simple(response.text)
             
-                        # 폰트 설정 (폰트 파일이 폴더에 있어야 함)
-                        try:
-                            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                            pdf.set_font('Nanum', '', 16)
-                        except:
-                            pdf.set_font("Arial", 'B', 16)
-
-                        pdf.cell(200, 10, txt="Microhard AI Style Report", ln=True, align='C')
-                        pdf.ln(10)
-            
-                        try:
-                            pdf.set_font('Nanum', '', 11)
-                        except:
-                            pdf.set_font("Arial", size=10)
-                        # --- 4단계 결과 출력 ---
-                        st.subheader("📊 AI 스타일 리포트")
-                        st.markdown(response.text)
-                        st.balloons()
-                        
-                        # --- PDF 생성 함수 (가장 안전한 구조) ---
-                        def create_pdf_simple(text_data):
-                            from fpdf import FPDF
-                            pdf = FPDF()
-                            pdf.add_page()
-                            try:
-                                # NanumGothic.ttf 파일이 저장소에 있어야 합니다
-                                pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                                pdf.set_font('Nanum', '', 14)
-                            except:
-                                # 폰트가 없으면 기본 영문 폰트로 대체 (한글은 깨질 수 있음)
-                                pdf.set_font("Arial", size=12)
-                            
-                            # 내용을 PDF에 채워넣기
-                            pdf.multi_cell(0, 10, txt=text_data)
-                            return pdf.output()
-                        
-                        st.divider()
-                        st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-                        
-                        # PDF 생성 및 버튼 표시 (에러 방지형)
-                        # try-except를 쓰지 않고 직접 생성하여 구조적 에러를 차단합니다.
-                        pdf_content = create_pdf_simple(response.text)
-                        
-                        st.download_button(
-                            label="📄 프리미엄 PDF 리포트 다운로드",
-                            data=pdf_content,
-                            file_name="Microhard_Style_Report.pdf",
-                            mime="application/pdf",
-                            key="unique_pdf_download_key"
-                        )
+            st.download_button(
+                label="📄 프리미엄 PDF 리포트 다운로드",
+                data=pdf_content,
+                file_name="Microhard_Style_Report.pdf",
+                mime="application/pdf",
+                key="unique_pdf_download_key"
+            )        
