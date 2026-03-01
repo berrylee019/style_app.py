@@ -9,7 +9,30 @@ st.set_page_config(page_title="AI 스타일 가이드", page_icon="👗")
 st.title("👗 AI 스타일 가이드: 실시간 비디오 분석")
 
 # 2. 비디오 업로드 섹션
-uploaded_file = st.file_uploader("분석할 쇼핑/스타일 영상을 업로드하세요.", type=['mp4', 'mov', 'avi'])
+# --- 영상 업로드 가이드 섹션 ---
+st.title("✨ AI 퍼스널 스타일 가이드")
+st.markdown("### 🤳 당신의 스타일을 10초 만에 분석해 드립니다")
+
+with st.expander("🎥 **더 정확한 분석을 위한 영상 촬영 꿀팁 (필독!)**", expanded=True):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        **1. 전신 샷은 필수!** 머리부터 발끝까지 화면에 다 들어와야  
+        정확한 비율 분석이 가능해요.
+        
+        **2. 천천히 360도 회전** 앞, 옆, 뒤태를 모두 보여주시면  
+        입체적인 핏 가이드를 드립니다.
+        """)
+    with col2:
+        st.markdown("""
+        **3. 밝은 곳에서 촬영** 조명이 밝아야 옷의 질감과  
+        퍼스널 컬러를 정확히 잡아내요.
+        
+        **4. 5~15초 내외 권장** 너무 길면 업로드 시간이 오래 걸려요!
+        """)
+
+# 실제 업로드 버튼
+uploaded_file = st.file_uploader("분석할 쇼핑/스타일 영상을 업로드하세요.", type=["mp4", "mov", "avi"])
 
 if uploaded_file is not None:
     st.video(uploaded_file)
@@ -105,3 +128,4 @@ if uploaded_file is not None:
                         )
                     except Exception as e:
                         st.error(f"PDF 파일 준비 중 오류가 발생했습니다: {e}")
+
