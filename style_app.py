@@ -101,8 +101,8 @@ if uploaded_file is not None:
                         st.subheader("📊 AI 스타일 리포트")
                         st.markdown(response.text)
                         st.balloons()
-
-                        # --- PDF 생성 및 다운로드 (가장 안전한 구조) ---
+                        
+                        # --- PDF 생성 함수 (가장 안전한 구조) ---
                         def create_pdf_simple(text_data):
                             from fpdf import FPDF
                             pdf = FPDF()
@@ -112,19 +112,21 @@ if uploaded_file is not None:
                                 pdf.add_font('Nanum', '', 'NanumGothic.ttf')
                                 pdf.set_font('Nanum', '', 14)
                             except:
+                                # 폰트가 없으면 기본 영문 폰트로 대체 (한글은 깨질 수 있음)
                                 pdf.set_font("Arial", size=12)
-            
+                            
+                            # 내용을 PDF에 채워넣기
                             pdf.multi_cell(0, 10, txt=text_data)
                             return pdf.output()
-
+                        
                         st.divider()
                         st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-
+                        
                         # PDF 생성 및 버튼 표시 (에러 방지형)
+                        # try-except를 쓰지 않고 직접 생성하여 구조적 에러를 차단합니다.
                         pdf_content = create_pdf_simple(response.text)
-        
-                        if pdf_content:
-                            st.download_button(
+                        
+                        st.download_button(
                             label="📄 프리미엄 PDF 리포트 다운로드",
                             data=pdf_content,
                             file_name="Microhard_Style_Report.pdf",
