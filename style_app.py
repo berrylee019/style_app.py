@@ -58,40 +58,41 @@ if uploaded_file is not None:
             prompt = "너는 세계적인 패션 스타일리스트야. 영상 속 인물의 스타일을 분석하고, 1. 전반적인 룩의 특징 2. 어울리는 액세서리 추천 3. 개선할 점을 전문적으로 알려줘."
 
             # --- 결과 출력 및 PDF 생성 로직 (60번 줄 이하 통합) ---
-            if response.text:
+            # --- (기존 이미지 처리 코드 바로 아래에 붙여넣으세요) ---
+        
+            # 1. AI에게 분석 요청 (이 줄이 핵심입니다!)
+            # 만약 모델 이름이 'model'이 아니라면 'vision_model' 등으로 확인해보세요.
+            result = model.generate_content([prompt, image_parts[0]])
+            
+            # 2. 결과 출력 및 PDF 생성
+            if result:
                 st.subheader("📊 AI 스타일 리포트")
-                st.markdown(response.text)
+                st.markdown(result.text)
                 st.balloons()
     
-                # PDF 생성을 위한 내부 함수
-                def create_pdf_file(text_content):
+                # PDF 생성 함수
+                def create_pdf_simple(text_data):
                     from fpdf import FPDF
                     pdf = FPDF()
                     pdf.add_page()
                     try:
-                        # NanumGothic.ttf 파일이 저장소에 있어야 합니다
                         pdf.add_font('Nanum', '', 'NanumGothic.ttf')
                         pdf.set_font('Nanum', '', 14)
                     except:
-                        # 폰트가 없을 때의 대비책
                         pdf.set_font("Arial", size=12)
-                    
-                    pdf.multi_cell(0, 10, txt=text_content)
+                    pdf.multi_cell(0, 10, txt=text_data)
                     return pdf.output()
     
                 st.divider()
                 st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
     
-                # PDF 데이터 생성
-                pdf_data = create_pdf_file(response.text)
-                
-                # 다운로드 버튼 표시
+                # PDF 버튼 생성
+                pdf_content = create_pdf_simple(result.text)
                 st.download_button(
                     label="📄 프리미엄 PDF 리포트 다운로드",
-                    data=pdf_data,
-                    file_name="Microhard_Style_Report.pdf",
+                    data=pdf_content,
+                    file_name="Style_Report.pdf",
                     mime="application/pdf",
-                    key="pdf_download_final"
+                    key="final_pdf_button"
                 )
-            else:
-                st.error("리포트 내용을 불러오지 못했습니다. 다시 시도해주세요.")
+    
