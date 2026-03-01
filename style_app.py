@@ -54,7 +54,7 @@ if uploaded_file is not None:
             # 4단계: 최종 리포트 생성 (가시성 강화)
             status_text.info("4단계: 스타일리스트가 영상을 다 봤습니다! 이제 리포트를 작성합니다... 📝")
         
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
             prompt = "너는 세계적인 패션 스타일리스트야. 영상 속 인물의 스타일을 분석하고, 1. 전반적인 룩의 특징 2. 어울리는 액세서리 추천 3. 개선할 점을 전문적으로 알려줘."
 
             try:
@@ -72,6 +72,7 @@ if uploaded_file is not None:
             except Exception as e:
                 st.error(f"리포트 생성 중 오류 발생: {e}")
                 # 만약 여기서 막힌다면 Streamlit 로그(Manage app -> Logs)를 확인해야 합니다.
+
 
 
 
