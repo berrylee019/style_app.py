@@ -64,36 +64,36 @@ if uploaded_file is not None:
                 # 결과 출력
                 st.subheader("📊 AI 스타일 리포트")
                 if response.text:
-            # --- 4단계 결과 출력 ---
-            st.subheader("📊 AI 스타일 리포트")
-            st.markdown(response.text)
-            st.balloons()
-    
-            # --- PDF 생성 함수 ---
-            def create_pdf_simple(text_data):
-                from fpdf import FPDF
-                pdf = FPDF()
-                pdf.add_page()
-                try:
-                    # 폰트 파일이 같은 폴더에 있어야 한글이 나옵니다
-                    pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                    pdf.set_font('Nanum', '', 14)
-                except:
-                    pdf.set_font("Arial", size=12)
-                
-                pdf.multi_cell(0, 10, txt=text_data)
-                return pdf.output()
-    
-            st.divider()
-            st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-    
-            # PDF 생성 및 버튼 표시
-            pdf_content = create_pdf_simple(response.text)
-            
-            st.download_button(
-                label="📄 프리미엄 PDF 리포트 다운로드",
-                data=pdf_content,
-                file_name="Microhard_Style_Report.pdf",
-                mime="application/pdf",
-                key="unique_pdf_download_key"
-            )        
+                    # --- 4단계 결과 출력 ---
+                    st.subheader("📊 AI 스타일 리포트")
+                    st.markdown(response.text)
+                    st.balloons()
+        
+                    # --- PDF 생성 함수 ---
+                    def create_pdf_simple(text_data):
+                        from fpdf import FPDF
+                        pdf = FPDF()
+                        pdf.add_page()
+                        try:
+                            # NanumGothic.ttf 파일이 저장소에 있어야 합니다
+                            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                            pdf.set_font('Nanum', '', 14)
+                        except:
+                            pdf.set_font("Arial", size=12)
+                        
+                        pdf.multi_cell(0, 10, txt=text_data)
+                        return pdf.output()
+        
+                    st.divider()
+                    st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
+        
+                    # PDF 생성 및 버튼 표시
+                    pdf_content = create_pdf_simple(response.text)
+                    
+                    st.download_button(
+                        label="📄 프리미엄 PDF 리포트 다운로드",
+                        data=pdf_content,
+                        file_name="Microhard_Style_Report.pdf",
+                        mime="application/pdf",
+                        key="unique_pdf_download_key"
+                    )
