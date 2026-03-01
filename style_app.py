@@ -120,31 +120,35 @@ if uploaded_file is not None:
                 return pdf.output(dest='S')
 
             # --- 여기서부터 화면에 버튼을 그리는 코드입니다요! (사라졌던 부분) ---
-            # --- 123번 줄부터 아래처럼 '#'을 붙여서 숨겨버립시다! ---
-
-            # st.divider()
-            # st.subheader("💎 프리미엄 리포트 다운로드")
-            # st.write("본 리포트에는 고객님의 체형과 스타일에 최적화된 심층 분석 데이터가 포함되어 있습니다.")
+            # --- 123번 줄: [무료 이벤트 버전] 리포트 섹션 ---
+            st.divider()
+            st.subheader("🎁 프리미엄 리포트 무료 나눔 이벤트")
+            st.write("지금 분석 결과를 PDF 리포트로 소장해 보세요. 오픈채팅으로 문의 주시면 열람 비밀번호를 즉시 알려드립니다!")
             
-            # col1, col2 = st.columns(2)
-            # with col1:
-            #     st.markdown("#### **서비스 안내**")
-            #     st.write("- **판매 가격:** 9,900원")
-            #     st.link_button("💳 입금 확인 및 비밀번호 문의", "https://open.kakao.com/o/your_link") 
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### **비밀번호 받는 법**")
+                st.write("✅ **현재 가격:** ~~9,900원~~ → **0원 (한시적 무료)**")
+                # 형님 오픈채팅 링크로 연결해주셔요!
+                st.link_button("💬 비밀번호 무료 문의하기", "https://open.kakao.com/o/your_link") 
             
-            # with col2:
-            #     input_pw = st.text_input("비밀번호를 입력해 주세요.", type="password", key="final_premium_pw")
+            with col2:
+                # 고객이 카톡으로 받아온 비번을 입력하는 곳입니다요
+                input_pw = st.text_input("전송받은 비밀번호를 입력하세요.", type="password", key="free_event_pw")
 
-            # if input_pw == "style77":
-            #     try:
-            #         pdf_data = create_pdf_file(st.session_state.analysis_result)
-            #         st.success("✅ 인증되었습니다. 아래 버튼을 클릭하여 리포트를 저장하십시오.")
-            #         st.download_button(
-            #             label="📄 프리미엄 PDF 리포트 다운로드",
-            #             data=bytes(pdf_data),
-            #             file_name="Style_Premium_Report.pdf",
-            #             mime="application/pdf",
-            #             key="last_dl_button"
-            #         )
-            #     except Exception as e:
-            #         st.error(f"리포트 생성 중 오류가 발생했습니다: {e}")
+            # 비밀번호 검증 (여전히 style77로 작동합니다요!)
+            if input_pw == "style77":
+                try:
+                    pdf_data = create_pdf_file(st.session_state.analysis_result)
+                    st.success("✅ 인증되었습니다! 아래 버튼을 눌러 리포트를 다운로드하세요.")
+                    st.download_button(
+                        label="📄 프리미엄 PDF 리포트 다운로드",
+                        data=bytes(pdf_data),
+                        file_name="Style_Premium_Report.pdf",
+                        mime="application/pdf",
+                        key="event_dl_button"
+                    )
+                except Exception as e:
+                    st.error(f"리포트 생성 중 오류 발생: {e}")
+            elif input_pw != "":
+                st.warning("⚠️ 비밀번호가 틀렸습니다. 오픈채팅으로 문의해 주세요!")
