@@ -28,41 +28,28 @@ if uploaded_file is not None:
             # 3. 비디오 업로드 및 처리 대기
             video_file = genai.upload_file(path="temp_video.mp4")
 
-            # 3단계: AI의 영상 처리 대기 (여기가 가장 오래 걸립니다)
-        
-            # 상태 확인 루프 보강
+            # 3단계: AI의 영상 처리 대기 (새로고침 강화 버전)
         start_time = time.time()
-        # with st.spinner("AI가 영상을 시청하기 위해 준비 중입니다..."):
-        while video_file.state.name == "PROCESSING":
+        while True:
+            video_file = genai.get_file(video_file.name) # 구글 서버에서 상태 다시 가져오기
             elapsed = int(time.time() - start_time)
-            status_text.warning(f"3단계: AI가 영상을 시청하며 분석 중... ({elapsed}초 경과)")
-            time.sleep(3)
-            video_file = genai.get_file(video_file.name)
             
-            # 너무 오래 걸리면(예: 3분) 강제 종료
-            if elapsed > 180:
-                st.error("시간 초과! 영상이 너무 크거나 구글 서버가 바쁩니다.")
+            if video_file.state.name == "ACTIVE":
+                status_text.success(f"3단계 완료! (총 {elapsed}초 소요)")
+                break
+            elif video_file.state.name == "FAILED":
+                st.error("AI가 영상 분석에 실패했습니다. 파일 형식을 확인해주세요.")
                 st.stop()
-                
-        if video_file.state.name == "FAILED":
-            st.error("비디오 처리 중 오류가 발생했습니다.")
-            st.stop()
-
-            # 4단계: 최종 리포트 생성
-            # 4. 분석 수행
-            status_text.success("4단계: 분석 완료! 리포트를 작성합니다...")
-            model = genai.GenerativeModel("gemini-1.5-flash") # 또는 2.0-flash
-
-            # 안전 장치: 프롬프트를 더 명확하게
-            prompt = "너는 세계적인 패션 스타일리스트야. 이 영상 속 인물의 스타일을 분석하고, 1. 전반적인 룩의 특징 2. 어울리는 액세서리 추천 3. 개선할 점을 전문적으로 알려줘."
-            response = model.generate_content([video_file, prompt])
             
-            st.subheader("📊 AI 스타일 리포트")
-            if response.text:
-                st.write(response.text)
-                status_text.empty() # 진행 상황 메시지 삭제
-            else:
-                st.write("분석 결과가 생성되지 않았습니다. 영상을 다시 확인해 주세요.")
+            # 진행 중임을 알리는 애니메이션 효과
+            dots = "." * (elapsed % 4)
+            status_text.warning(f"3단계: AI가 영상을 시청하는 중입니다{dots} ({elapsed}초 경과)")
+            
+            time.sleep(2) # 2초마다 확인
+
+            if elapsed > 120: # 2분 넘어가면 비상 정지
+                st.error("영상 처리가 너무 오래 걸립니다. 다시 시도해 주세요.")
+                st.stop()
 
 
 
