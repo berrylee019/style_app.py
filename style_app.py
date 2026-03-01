@@ -68,6 +68,43 @@ if uploaded_file is not None:
                     st.balloons() # 분석 성공 축하 풍선! 🎈
                     st.success("✅ Microhard AI 스타일리스트가 분석을 마쳤습니다!")
                     st.markdown(response.text) # 리포트 본문 출력
+
+                    # --- PDF 리포트 생성 섹션 ---
+                    from fpdf import FPDF
+                    import base64
+
+                    def create_pdf(text):
+            from fpdf import FPDF
+            
+            # 1. PDF 객체 생성 (유니코드 지원을 위해 'UTF-8'과 유사한 처리 가능하게 설정)
+            pdf = FPDF()
+            pdf.add_page()
+            
+            # 2. 폰트 등록 (파일이 같은 경로에 있어야 함)
+            # 'Nanum'은 별명, 'NanumGothic.ttf'는 실제 파일명입니다.
+            try:
+                pdf.add_font('Nanum', '', 'NanumGothic.ttf', unicode=True)
+                pdf.set_font('Nanum', '', 16)
+            except:
+                # 폰트 파일이 없을 경우를 대비한 비상용 설정
+                pdf.set_font("Arial", 'B', 16)
+
+            # 3. 제목 작성
+            pdf.cell(200, 10, txt="Microhard AI Style Report", ln=True, align='C')
+            pdf.ln(10)
+            
+            # 4. 본문 작성 (폰트 크기 조절)
+            try:
+                pdf.set_font('Nanum', '', 11)
+            except:
+                pdf.set_font("Arial", size=10)
+
+            # 5. 한글 깨짐 방지를 위해 multi_cell 사용
+            # AI 답변(text)을 그대로 넣어도 unicode=True 설정 덕분에 잘 나옵니다.
+            pdf.multi_cell(0, 10, txt=text)
+            
+            # 출력을 바이트로 변환 (latin-1 인코딩 없이 그대로 내보냅니다)
+            return pdf.output(dest='S')
                     status_text.success("✅ 모든 분석이 완료되었습니다!")
                 else:
                     st.write("AI가 답변을 생성하지 못했습니다. (안전 필터 작동 가능성)")
@@ -75,6 +112,7 @@ if uploaded_file is not None:
             except Exception as e:
                 st.error(f"리포트 생성 중 오류 발생: {e}")
                 # 만약 여기서 막힌다면 Streamlit 로그(Manage app -> Logs)를 확인해야 합니다.
+
 
 
 
