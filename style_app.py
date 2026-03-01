@@ -22,11 +22,16 @@ if uploaded_file is not None:
 
             # 3. 비디오 업로드 및 처리 대기
             video_file = genai.upload_file(path="temp_video.mp4")
-            
+
+            # 상태 확인 루프 보강
+        with st.spinner("AI가 영상을 시청하기 위해 준비 중입니다..."):
             while video_file.state.name == "PROCESSING":
                 time.sleep(2)
                 video_file = genai.get_file(video_file.name)
-
+        if video_file.state.name == "FAILED":
+            st.error("비디오 처리 중 오류가 발생했습니다.")
+            st.stop()
+            
             # 4. 분석 수행
             model = genai.GenerativeModel("gemini-1.5-flash") # 또는 2.0-flash
             response = model.generate_content([
@@ -36,4 +41,5 @@ if uploaded_file is not None:
             ])
             
             st.subheader("📊 AI 스타일 리포트")
+
             st.write(response.text)
