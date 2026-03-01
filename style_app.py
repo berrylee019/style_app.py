@@ -57,43 +57,41 @@ if uploaded_file is not None:
             model = genai.GenerativeModel("gemini-2.5-flash")
             prompt = "너는 세계적인 패션 스타일리스트야. 영상 속 인물의 스타일을 분석하고, 1. 전반적인 룩의 특징 2. 어울리는 액세서리 추천 3. 개선할 점을 전문적으로 알려줘."
 
-            try:
-                # AI에게 답변 요청
-                response = model.generate_content([video_file, prompt])
-            
-                # 결과 출력
+            # --- 결과 출력 및 PDF 생성 로직 (60번 줄 이하 통합) ---
+            if response.text:
                 st.subheader("📊 AI 스타일 리포트")
-                if response.text:
-                    # --- 4단계 결과 출력 ---
-                    st.subheader("📊 AI 스타일 리포트")
-                    st.markdown(response.text)
-                    st.balloons()
-        
-                    # --- PDF 생성 함수 ---
-                    def create_pdf_simple(text_data):
-                        from fpdf import FPDF
-                        pdf = FPDF()
-                        pdf.add_page()
-                        try:
-                            # NanumGothic.ttf 파일이 저장소에 있어야 합니다
-                            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                            pdf.set_font('Nanum', '', 14)
-                        except:
-                            pdf.set_font("Arial", size=12)
-                        
-                        pdf.multi_cell(0, 10, txt=text_data)
-                        return pdf.output()
-        
-                    st.divider()
-                    st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-        
-                    # PDF 생성 및 버튼 표시
-                    pdf_content = create_pdf_simple(response.text)
+                st.markdown(response.text)
+                st.balloons()
+    
+                # PDF 생성을 위한 내부 함수
+                def create_pdf_file(text_content):
+                    from fpdf import FPDF
+                    pdf = FPDF()
+                    pdf.add_page()
+                    try:
+                        # NanumGothic.ttf 파일이 저장소에 있어야 합니다
+                        pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                        pdf.set_font('Nanum', '', 14)
+                    except:
+                        # 폰트가 없을 때의 대비책
+                        pdf.set_font("Arial", size=12)
                     
-                    st.download_button(
-                        label="📄 프리미엄 PDF 리포트 다운로드",
-                        data=pdf_content,
-                        file_name="Microhard_Style_Report.pdf",
-                        mime="application/pdf",
-                        key="unique_pdf_download_key"
-                    )
+                    pdf.multi_cell(0, 10, txt=text_content)
+                    return pdf.output()
+    
+                st.divider()
+                st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
+    
+                # PDF 데이터 생성
+                pdf_data = create_pdf_file(response.text)
+                
+                # 다운로드 버튼 표시
+                st.download_button(
+                    label="📄 프리미엄 PDF 리포트 다운로드",
+                    data=pdf_data,
+                    file_name="Microhard_Style_Report.pdf",
+                    mime="application/pdf",
+                    key="pdf_download_final"
+                )
+            else:
+                st.error("리포트 내용을 불러오지 못했습니다. 다시 시도해주세요.")
