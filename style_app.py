@@ -123,7 +123,7 @@ if uploaded_file is not None:
             # --- 123번 줄: [무료 이벤트 버전] 리포트 섹션 ---
             st.divider()
             st.subheader("🎁 프리미엄 리포트 무료 나눔 이벤트")
-            st.write("지금 분석 결과를 PDF 리포트로 소장해 보세요. 오픈채팅으로 문의 주시면 열람 비밀번호를 즉시 알려드립니다!")
+            st.write("지금 분석 결과를 PDF 리포트로 소장해 보세요. 오픈채팅으로 문의 주시면 열람 비밀번호를 즉시 알려드립니다!(체험 후 피드백 주시면 더욱 좋은 서비스로 보답하겠습니다.)")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -152,3 +152,4 @@ if uploaded_file is not None:
                     st.error(f"리포트 생성 중 오류 발생: {e}")
             elif input_pw != "":
                 st.warning("⚠️ 비밀번호가 틀렸습니다. 오픈채팅으로 문의해 주세요!")
+
