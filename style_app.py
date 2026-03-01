@@ -71,23 +71,24 @@ if uploaded_file is not None:
                     st.markdown(result.text)
                     st.balloons()
     
-                    # --- PDF 생성 함수 (수정됨) ---
+                    # --- PDF 생성 함수 (불필요한 encode 제거) ---
                     def create_pdf_file(text_content):
                         from fpdf import FPDF
                         pdf = FPDF()
                         pdf.add_page()
                         try:
+                            # NanumGothic.ttf 파일이 저장소에 있어야 합니다
                             pdf.add_font('Nanum', '', 'NanumGothic.ttf')
                             pdf.set_font('Nanum', '', 14)
                         except:
                             pdf.set_font("Arial", size=12)
                         
-                        # 한글 깨짐 방지를 위해 인코딩 처리
+                        # 텍스트 정리 (특수문자 에러 방지)
                         clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
                         pdf.multi_cell(0, 10, txt=clean_text)
                         
-                        # [중요] 'S' 옵션을 써야 스트림릿이 인식하는 바이트로 출력됩니다.
-                        return pdf.output(dest='S').encode('latin-1')
+                        # [수정] output(dest='S')는 이미 바이트 형태이므로 encode가 필요 없습니다.
+                        return pdf.output(dest='S')
     
                     st.divider()
                     st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
@@ -97,10 +98,10 @@ if uploaded_file is not None:
                         pdf_data = create_pdf_file(result.text)
                         st.download_button(
                             label="📄 프리미엄 PDF 리포트 다운로드",
-                            data=pdf_data,
+                            data=bytes(pdf_data), # 안전하게 바이트로 형변환
                             file_name="Style_Report.pdf",
                             mime="application/pdf",
-                            key="final_pdf_button_fixed"
+                            key="final_pdf_button_v3"
                         )
                     except Exception as e:
                         st.error(f"PDF 파일 준비 중 오류가 발생했습니다: {e}")
