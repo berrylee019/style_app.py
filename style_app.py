@@ -116,13 +116,8 @@ if uploaded_file is not None:
                             mime="application/pdf"
                         )
                     except Exception as e:
-                        st.warning("PDF를 생성하려면 NanumGothic.ttf 파일이 필요합니다.")
-                        # st.write(f"에러 상세: {e}") # 디버깅용
-
-
-
-
-
+                        st.warning("PDF를 생성 중 문제가 발생했습니다.")
+                        st.write(f"에러 상세: {e}") # 디버깅용
 
 
 
