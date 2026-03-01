@@ -59,48 +59,48 @@ if uploaded_file is not None:
 
             # --- 이미지 처리 및 AI 분석 (60번 줄 이하 통합) ---
             if uploaded_file is not None:
-                # 1. 업로드된 파일을 AI가 읽을 수 있는 바이트(Bytes)로 변환
+                # 1. 이미지 변환
                 bytes_data = uploaded_file.getvalue()
-                image_parts = [
-                    {
-                        "mime_type": uploaded_file.type,
-                        "data": bytes_data
-                    }
-                ]
+                image_parts = [{"mime_type": uploaded_file.type, "data": bytes_data}]
     
-                # 2. AI에게 분석 요청 (연료와 질문을 함께 던집니다)
-                # 만약 여기서 'model' 에러가 나면 'vision_model' 등으로 이름을 확인해주세요.
+                # 2. AI 분석 요청
                 result = model.generate_content([prompt, image_parts[0]])
                 
-                # 3. 결과 출력 및 PDF 생성
                 if result.text:
                     st.subheader("📊 AI 스타일 리포트")
                     st.markdown(result.text)
                     st.balloons()
     
-                    # PDF 생성 함수
+                    # --- PDF 생성 함수 (수정됨) ---
                     def create_pdf_file(text_content):
                         from fpdf import FPDF
                         pdf = FPDF()
                         pdf.add_page()
                         try:
-                            # NanumGothic.ttf 파일이 저장소에 있어야 합니다
                             pdf.add_font('Nanum', '', 'NanumGothic.ttf')
                             pdf.set_font('Nanum', '', 14)
                         except:
                             pdf.set_font("Arial", size=12)
-                        pdf.multi_cell(0, 10, txt=text_content)
-                        return pdf.output()
+                        
+                        # 한글 깨짐 방지를 위해 인코딩 처리
+                        clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
+                        pdf.multi_cell(0, 10, txt=clean_text)
+                        
+                        # [중요] 'S' 옵션을 써야 스트림릿이 인식하는 바이트로 출력됩니다.
+                        return pdf.output(dest='S').encode('latin-1')
     
                     st.divider()
                     st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
     
-                    # PDF 버튼 생성
-                    pdf_data = create_pdf_file(result.text)
-                    st.download_button(
-                        label="📄 프리미엄 PDF 리포트 다운로드",
-                        data=pdf_data,
-                        file_name="Style_Report.pdf",
-                        mime="application/pdf",
-                        key="final_pdf_button"
-                    )
+                    # 3. PDF 데이터 생성 및 버튼 배치
+                    try:
+                        pdf_data = create_pdf_file(result.text)
+                        st.download_button(
+                            label="📄 프리미엄 PDF 리포트 다운로드",
+                            data=pdf_data,
+                            file_name="Style_Report.pdf",
+                            mime="application/pdf",
+                            key="final_pdf_button_fixed"
+                        )
+                    except Exception as e:
+                        st.error(f"PDF 파일 준비 중 오류가 발생했습니다: {e}")
