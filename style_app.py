@@ -98,51 +98,44 @@ if uploaded_file is not None:
                         except:
                             pdf.set_font("Arial", size=10)
 
-                        # 한글 출력을 위해 multi_cell 사용
-                        pdf.multi_cell(0, 10, txt=text_content)
-                        return pdf.output()
+                        # --- 4단계 결과 출력 ---
+                        st.subheader("📊 AI 스타일 리포트")
+                        if response.text:
+                            st.markdown(response.text)
+                            st.balloons()
 
-                    # --- PDF 생성 및 다운로드 섹션 시작 ---
-                    st.divider()
-                    st.subheader("💎 프리미엄 서비스")
-                    st.info("전문적인 분석 결과가 담긴 PDF 리포트를 소장하세요.")
-                    
-                    # --- 4단계 결과 출력 ---
-                    st.subheader("📊 AI 스타일 리포트")
-                    st.markdown(response.text)
-                    st.balloons()
+                            # --- PDF 생성 함수 정의 ---
+                            def create_pdf_file(report_text):
+                                from fpdf import FPDF
+                                pdf = FPDF()
+                                pdf.add_page()
+                                try:
+                                    # NanumGothic.ttf 파일이 저장소에 있어야 합니다
+                                    pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+                                    pdf.set_font('Nanum', '', 14)
+                                except:
+                                    pdf.set_font("Arial", size=12)
+                
+                                pdf.multi_cell(0, 10, txt=report_text)
+                                return pdf.output()
 
-                    # --- PDF 생성 함수 정의 ---
-                    def create_pdf_file(report_text):
-                        from fpdf import FPDF
-                        pdf = FPDF()
-                        pdf.add_page()
-                        try:
-                            # 폰트 파일이 같은 폴더에 있어야 한글이 나옵니다
-                            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
-                            pdf.set_font('Nanum', '', 14)
-                        except Exception:
-                            # 폰트가 없으면 기본 영문 폰트로 대체
-                            pdf.set_font("Arial", size=12)
-            
-                        pdf.multi_cell(0, 10, txt=report_text)
-                        return pdf.output()
+                            # --- 프리미엄 PDF 다운로드 섹션 ---
+                            st.divider()
+                            st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
 
-                    # --- 프리미엄 PDF 다운로드 섹션 ---
-                    st.divider()
-                    st.info("💎 프리미엄 PDF 리포트를 소장하세요.")
-
-                    try:
-                        # PDF 데이터 생성
-                        pdf_out = create_pdf_file(response.text)
-            
-                        # 다운로드 버튼 (모든 괄호가 정확히 닫혀 있는지 확인 완료!)
-                        st.download_button(
-                            label="📄 프리미엄 PDF 리포트 다운로드",
-                            data=pdf_out,
-                            file_name="Microhard_Style_Report.pdf",
-                            mime="application/pdf",
-                            key="btn_premium_pdf"
-                        )
-                    except Exception as e:
-                        st.error(f"PDF 생성 중 오류 발생: {e}")
+                            try:
+                                # PDF 데이터 생성
+                                pdf_out = create_pdf_file(response.text)
+                
+                                # 다운로드 버튼
+                                st.download_button(
+                                    label="📄 프리미엄 PDF 리포트 다운로드",
+                                    data=pdf_out,
+                                    file_name="Microhard_Style_Report.pdf",
+                                    mime="application/pdf",
+                                    key="btn_premium_pdf"
+                                )
+                            except Exception as e:
+                                st.error(f"PDF 준비 중 오류가 발생했습니다: {e}")
+                        else:
+                            st.error("리포트 생성에 실패했습니다. 다시 시도해주세요.")
