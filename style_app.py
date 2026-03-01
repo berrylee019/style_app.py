@@ -108,16 +108,21 @@ if uploaded_file is not None:
                     st.info("전문적인 분석 결과가 담긴 PDF 리포트를 소장하세요.")
         
                     try:
+                        # PDF 생성 시도
                         pdf_bytes = create_pdf(response.text)
+            
+                        # 성공 시 다운로드 버튼 표시
                         st.download_button(
                             label="📄 프리미엄 PDF 리포트 다운로드",
                             data=pdf_bytes,
                             file_name="Microhard_Style_Report.pdf",
-                            mime="application/pdf"
+                            mime="application/pdf",
+                            key="pdf_download_btn"
                         )
                     except Exception as e:
-                        st.warning("PDF를 생성 중 문제가 발생했습니다.")
-                        st.write(f"에러 상세: {e}") # 디버깅용
+                        # 에러 발생 시(예: 폰트 파일 없음 등) 사용자에게 안내
+                        st.warning("현재 PDF 리포트를 생성할 수 없습니다. NanumGothic.ttf 파일 확인이 필요합니다.")
+                        st.error(f"에러 내용: {e}")
 
 
 
