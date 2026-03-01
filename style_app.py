@@ -64,7 +64,10 @@ if uploaded_file is not None:
                 # 결과 출력
                 st.subheader("📊 AI 스타일 리포트")
                 if response.text:
-                    st.markdown(response.text) # 리포트를 예쁘게 출력
+                    # 기존의 st.write나 st.markdown 줄을 아래 내용으로 교체
+                    st.balloons() # 분석 성공 축하 풍선! 🎈
+                    st.success("✅ Microhard AI 스타일리스트가 분석을 마쳤습니다!")
+                    st.markdown(response.text) # 리포트 본문 출력
                     status_text.success("✅ 모든 분석이 완료되었습니다!")
                 else:
                     st.write("AI가 답변을 생성하지 못했습니다. (안전 필터 작동 가능성)")
@@ -72,6 +75,7 @@ if uploaded_file is not None:
             except Exception as e:
                 st.error(f"리포트 생성 중 오류 발생: {e}")
                 # 만약 여기서 막힌다면 Streamlit 로그(Manage app -> Logs)를 확인해야 합니다.
+
 
 
 
