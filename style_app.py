@@ -69,28 +69,53 @@ if uploaded_file is not None:
             st.markdown(st.session_state.analysis_result)
             st.balloons()
 
-            # --- 4. PDF 생성 기계 (고급형) ---
+            # --- 73번 줄: PDF 생성 기계 (한글 깨짐 완벽 방어 버전) ---
             def create_pdf_file(text_content):
                 from fpdf import FPDF
                 from datetime import datetime
+                import re
+
                 pdf = FPDF()
                 pdf.add_page()
+                
+                # 1. 폰트 설정 (나눔고딕 파일이 있어야 한글이 나옵니다요!)
                 try:
                     pdf.add_font('Nanum', '', 'NanumGothic.ttf')
                     pdf.set_font('Nanum', '', 12)
+                    is_korean_available = True
                 except:
+                    # 폰트 파일이 없으면 영어 전용 폰트로 강제 전환
                     pdf.set_font("Arial", size=11)
+                    is_korean_available = False
 
+                # 2. 헤더: 프리미엄 타이틀
                 pdf.set_text_color(40, 40, 40)
                 pdf.cell(0, 10, "MICROHARD AI STYLE PREMIUM REPORT", ln=True, align='C')
                 pdf.set_font("Arial", size=8)
                 pdf.cell(0, 5, f"Issued Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
                 pdf.ln(10)
 
-                clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
+                # 3. 본문 작성 (한글 폰트 여부에 따라 다르게 처리)
+                if is_korean_available:
+                    # 한글 폰트가 있으면 그대로 출력
+                    clean_text = text_content.encode('utf-8', 'ignore').decode('utf-8')
+                    pdf.set_font('Nanum', '', 11)
+                else:
+                    # 한글 폰트가 없으면 에러 방지를 위해 한글을 다 지우고 영어/숫자만 출력
+                    # (형님, 나중에 NanumGothic.ttf 파일 꼭 올리셔야 한글이 나와유!)
+                    clean_text = re.sub(r'[^\x00-\x7F]+', '[KOR]', text_content)
+                    pdf.set_font("Arial", size=11)
+
                 for line in clean_text.split('\n'):
                     if line.strip():
                         pdf.multi_cell(0, 8, txt=line)
+                
+                # 4. 푸터
+                pdf.ln(20)
+                pdf.set_font("Arial", size=9)
+                pdf.set_text_color(150, 150, 150)
+                pdf.cell(0, 10, "© 2026 Microhard Style Solution. All Rights Reserved.", align='C')
+                
                 return pdf.output(dest='S')
 
             # --- 5. 수익화 섹션 (비밀번호 로직) ---
@@ -122,6 +147,7 @@ if uploaded_file is not None:
                     st.error(f"리포트 생성 중 오류 발생: {e}")
             elif input_pw != "":
                 st.warning("❌ 비밀번호가 틀렸습니다요!")
+
 
 
 
