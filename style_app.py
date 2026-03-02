@@ -121,35 +121,63 @@ if uploaded_file is not None:
 
             # --- 여기서부터 화면에 버튼을 그리는 코드입니다요! (사라졌던 부분) ---
             # --- 123번 줄: [무료 이벤트 버전] 리포트 섹션 ---
+            #st.divider()
+            #st.subheader("🎁 프리미엄 리포트 무료 나눔 이벤트")
+            #st.write("지금 분석 결과를 PDF 리포트로 소장해 보세요. 오픈채팅으로 문의 주시면 열람 비밀번호를 즉시 알려드립니다!(체험 후 피드백 주시면 더욱 좋은 서비스로 보답하겠습니다.)")
+            
+            #col1, col2 = st.columns(2)
+            #with col1:
+            #   st.markdown("#### **비밀번호 받는 법**")
+            #    st.write("✅ **현재 가격:** ~~9,900원~~ → **0원 (한시적 무료)**")
+                # 형님 오픈채팅 링크로 연결해주셔요!
+            #   st.link_button("💬 비밀번호 무료 문의하기", "https://open.kakao.com/o/your_link") 
+            
+            #with col2:
+                # 고객이 카톡으로 받아온 비번을 입력하는 곳입니다요
+            #   input_pw = st.text_input("전송받은 비밀번호를 입력하세요.", type="password", key="free_event_pw")
+
+            # 비밀번호 검증 (여전히 style77로 작동합니다요!)
+            #if input_pw == "style77":
+            #   try:
+            #        pdf_data = create_pdf_file(st.session_state.analysis_result)
+            #        st.success("✅ 인증되었습니다! 아래 버튼을 눌러 리포트를 다운로드하세요.")
+            #        st.download_button(
+            #            label="📄 프리미엄 PDF 리포트 다운로드",
+            #            data=bytes(pdf_data),
+            #            file_name="Style_Premium_Report.pdf",
+            #            mime="application/pdf",
+            #            key="event_dl_button"
+            #        )
+            #    except Exception as e:
+            #        st.error(f"리포트 생성 중 오류 발생: {e}")
+            #elif input_pw != "":
+            #    st.warning("⚠️ 비밀번호가 틀렸습니다. 오픈채팅으로 문의해 주세요!")
+            # --- 96번 줄: [네이버 카페 연동 버전] ---
             st.divider()
-            st.subheader("🎁 프리미엄 리포트 무료 나눔 이벤트")
-            st.write("지금 분석 결과를 PDF 리포트로 소장해 보세요. 오픈채팅으로 문의 주시면 열람 비밀번호를 즉시 알려드립니다!(체험 후 피드백 주시면 더욱 좋은 서비스로 보답하겠습니다.)")
+            st.subheader("🚀 스타일 업그레이드 본부: 네이버 카페 오픈!")
+            st.write("나만의 분석 리포트를 평생 소장하고, 전문가의 패션 팁을 무료로 받아보세요.")
             
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("#### **비밀번호 받는 법**")
-                st.write("✅ **현재 가격:** ~~9,900원~~ → **0원 (한시적 무료)**")
-                # 형님 오픈채팅 링크로 연결해주셔요!
-                st.link_button("💬 비밀번호 무료 문의하기", "https://open.kakao.com/o/your_link") 
+                st.info("💡 **카페 가입 회원 특전**\n1. 프리미엄 PDF 리포트 비번 즉시 공개\n2. 체형별 코디 가이드북 증정\n3. 매월 베스트 드레서 경품 이벤트")
+                # 형님의 네이버 카페 주소로 바꾸셔요!
+                st.link_button("☕ 네이버 카페 가입하고 비번 확인", "https://cafe.naver.com/your_cafe_link") 
             
             with col2:
-                # 고객이 카톡으로 받아온 비번을 입력하는 곳입니다요
-                input_pw = st.text_input("전송받은 비밀번호를 입력하세요.", type="password", key="free_event_pw")
+                # 카페 공지사항이나 가입 인사 답변에 비번을 적어두시면 됩니다요!
+                input_pw = st.text_input("카페에서 확인한 비밀번호를 입력하세요.", type="password", key="cafe_event_pw")
 
-            # 비밀번호 검증 (여전히 style77로 작동합니다요!)
             if input_pw == "style77":
                 try:
                     pdf_data = create_pdf_file(st.session_state.analysis_result)
-                    st.success("✅ 인증되었습니다! 아래 버튼을 눌러 리포트를 다운로드하세요.")
+                    st.success("✨ 인증 완료! 당신만의 프리미엄 스타일 리포트를 다운로드하세요.")
                     st.download_button(
                         label="📄 프리미엄 PDF 리포트 다운로드",
                         data=bytes(pdf_data),
                         file_name="Style_Premium_Report.pdf",
                         mime="application/pdf",
-                        key="event_dl_button"
+                        key="cafe_dl_button"
                     )
                 except Exception as e:
                     st.error(f"리포트 생성 중 오류 발생: {e}")
-            elif input_pw != "":
-                st.warning("⚠️ 비밀번호가 틀렸습니다. 오픈채팅으로 문의해 주세요!")
 
