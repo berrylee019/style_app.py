@@ -130,7 +130,7 @@ if uploaded_file is not None:
             #   st.markdown("#### **비밀번호 받는 법**")
             #    st.write("✅ **현재 가격:** ~~9,900원~~ → **0원 (한시적 무료)**")
                 # 형님 오픈채팅 링크로 연결해주셔요!
-            #   st.link_button("💬 비밀번호 무료 문의하기", "https://open.kakao.com/o/your_link") 
+            #   st.link_button("💬 비밀번호 무료 문의하기", "https://open.kakao.com/o/sFhQdXii") 
             
             #with col2:
                 # 고객이 카톡으로 받아온 비번을 입력하는 곳입니다요
@@ -161,7 +161,7 @@ if uploaded_file is not None:
             with col1:
                 st.info("💡 **카페 가입 회원 특전**\n1. 프리미엄 PDF 리포트 비번 즉시 공개\n2. 체형별 코디 가이드북 증정\n3. 매월 베스트 드레서 경품 이벤트")
                 # 형님의 네이버 카페 주소로 바꾸셔요!
-                st.link_button("☕ 네이버 카페 가입하고 비번 확인", "https://cafe.naver.com/your_cafe_link") 
+                st.link_button("☕ 네이버 카페 가입하고 비번 확인", "https://cafe.naver.com/stylely") 
             
             with col2:
                 # 카페 공지사항이나 가입 인사 답변에 비번을 적어두시면 됩니다요!
@@ -180,4 +180,5 @@ if uploaded_file is not None:
                     )
                 except Exception as e:
                     st.error(f"리포트 생성 중 오류 발생: {e}")
+
 
