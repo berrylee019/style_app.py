@@ -108,7 +108,7 @@ if uploaded_file is not None:
         if st.button("✨ AI 스타일 분석 시작"):
             with st.status("🔍 AI가 스타일을 정밀 분석 중입니다...", expanded=True) as status:
                 try:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    model = genai.GenerativeModel('gemini-2.5-flash')
                     video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                     prompt = "패션 전문가로서 영상 속 인물의 #패션 점수, #체형 분석, #개선 제안을 한국어로 상세히 리포트해 주세요."
                     response = model.generate_content([prompt, video_part])
@@ -147,6 +147,7 @@ if uploaded_file is not None:
                     st.error(f"PDF 생성 중 글꼴 에러가 났구먼유: {e}")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
 
