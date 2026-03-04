@@ -168,53 +168,25 @@ if uploaded_file is not None:
 
         # PDF 생성 함수
     def create_pdf_file(text_content):
-        from fpdf import FPDF
-        from datetime import datetime
-        import re
-
-        pdf = FPDF(orientation='P', unit='mm', format='A4')
-        pdf.set_margins(left=20, top=20, right=20)
-        pdf.set_auto_page_break(auto=True, margin=25)
+        pdf = FPDF()
         pdf.add_page()
         
-        try:
-            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
+        # 폰트 파일이 있는지 확인하고 로드
+        font_path = "NanumGothic.ttf" # 파일이 같은 폴더에 있어야 함!
+        
+        if os.path.exists(font_path):
+            pdf.add_font('Nanum', '', font_path, unicode=True)
             pdf.set_font('Nanum', '', 12)
-        except:
-            pdf.set_font("Arial", size=11)
-
-        pdf.set_text_color(50, 50, 50)
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(170, 15, "AI STYLE PREMIUM ANALYSIS REPORT", ln=True, align='C')
+        else:
+            # 폰트가 없으면 기본 Arial로 영어만 나오게 (에러 방지용)
+            pdf.set_font("Arial", size=12)
+            text_content = "Font file missing. Please check NanumGothic.ttf on server."
+    
+        pdf.set_text_color(31, 41, 55)
+        pdf.multi_cell(0, 10, txt=text_content)
         
-        pdf.set_font("Arial", size=9)
-        pdf.set_text_color(100, 100, 100)
-        pdf.cell(170, 5, f"Report ID: {datetime.now().strftime('%Y%m%d%H%M%S')}", ln=True, align='C')
-        pdf.ln(15)
-
-        pdf.set_text_color(0, 0, 0)
-        clean_text = text_content.replace('#', '').strip()
-        
-        for line in clean_text.split('\n'):
-            line = line.strip()
-            if line:
-                pdf.set_x(20) # 왼쪽 정렬 고정!
-                try:
-                    pdf.set_font('Nanum', '', 11)
-                    pdf.multi_cell(170, 8, txt=line, align='L')
-                except:
-                    pdf.set_font("Arial", size=11)
-                    pdf.multi_cell(170, 8, txt=line.encode('ascii', 'ignore').decode('ascii'), align='L')
-            else:
-                pdf.ln(2)
-
-        pdf.ln(10)
-        pdf.set_x(20)
-        pdf.set_font("Arial", size=8)
-        pdf.set_text_color(180, 180, 180)
-        pdf.cell(170, 10, "Copyright 2026. Microhard All rights reserved.", align='C')
-        
-        return pdf.output(dest='S')
+        # latin-1 에러 방지를 위해 'dest=S' 대신 바이트스트림 직접 처리
+        return pdf.output(dest='S').encode('latin-1', errors='replace')
 
         # --- 네이버 카페 연동 섹션 ---
         st.divider()
@@ -240,6 +212,7 @@ if uploaded_file is not None:
                     st.warning("PDF 생성 중 글꼴 설정을 확인해 주세요.")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
 
