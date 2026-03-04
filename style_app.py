@@ -44,7 +44,7 @@ def create_pdf_file(text_content):
     font_path = "NanumGothic.ttf"
     
     if os.path.exists(font_path):
-        pdf.add_font('Nanum', '', font_path, unicode=True)
+        pdf.add_font('Nanum', '', font_path)
         pdf.set_font('Nanum', '', 12)
     else:
         pdf.set_font("Arial", size=12)
@@ -147,3 +147,4 @@ if uploaded_file is not None:
                     st.error(f"PDF 생성 중 글꼴 에러가 났구먼유: {e}")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
