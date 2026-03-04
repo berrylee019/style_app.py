@@ -168,22 +168,53 @@ if uploaded_file is not None:
 
         # PDF 생성 함수
     def create_pdf_file(text_content):
-        pdf = FPDF()
+        from fpdf import FPDF
+        from datetime import datetime
+        import re
+
+        pdf = FPDF(orientation='P', unit='mm', format='A4')
+        pdf.set_margins(left=20, top=20, right=20)
+        pdf.set_auto_page_break(auto=True, margin=25)
         pdf.add_page()
-        # 폰트 설정 (나눔고딕 파일이 실행 환경에 있어야 함)
+        
         try:
-            pdf.add_font('Nanum', '', 'NanumGothic.ttf', unicode=True)
+            pdf.add_font('Nanum', '', 'NanumGothic.ttf')
             pdf.set_font('Nanum', '', 12)
         except:
-            pdf.set_font("Arial", size=12)
-       
-        pdf.set_text_color(31, 41, 55)
-        pdf.cell(200, 10, txt="AI PREMIUM STYLE REPORT", ln=True, align='C')
-        pdf.ln(10)
-       
+            pdf.set_font("Arial", size=11)
+
+        pdf.set_text_color(50, 50, 50)
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(170, 15, "AI STYLE PREMIUM ANALYSIS REPORT", ln=True, align='C')
+        
+        pdf.set_font("Arial", size=9)
+        pdf.set_text_color(100, 100, 100)
+        pdf.cell(170, 5, f"Report ID: {datetime.now().strftime('%Y%m%d%H%M%S')}", ln=True, align='C')
+        pdf.ln(15)
+
+        pdf.set_text_color(0, 0, 0)
         clean_text = text_content.replace('#', '').strip()
-        pdf.multi_cell(0, 10, txt=clean_text)
-        return pdf.output(dest='S').encode('latin-1', errors='replace')
+        
+        for line in clean_text.split('\n'):
+            line = line.strip()
+            if line:
+                pdf.set_x(20) # 왼쪽 정렬 고정!
+                try:
+                    pdf.set_font('Nanum', '', 11)
+                    pdf.multi_cell(170, 8, txt=line, align='L')
+                except:
+                    pdf.set_font("Arial", size=11)
+                    pdf.multi_cell(170, 8, txt=line.encode('ascii', 'ignore').decode('ascii'), align='L')
+            else:
+                pdf.ln(2)
+
+        pdf.ln(10)
+        pdf.set_x(20)
+        pdf.set_font("Arial", size=8)
+        pdf.set_text_color(180, 180, 180)
+        pdf.cell(170, 10, "Copyright 2026. Microhard All rights reserved.", align='C')
+        
+        return pdf.output(dest='S')
 
         # --- 네이버 카페 연동 섹션 ---
         st.divider()
@@ -209,6 +240,7 @@ if uploaded_file is not None:
                     st.warning("PDF 생성 중 글꼴 설정을 확인해 주세요.")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
 
