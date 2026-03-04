@@ -170,22 +170,19 @@ if uploaded_file is not None:
     def create_pdf_file(text_content):
         pdf = FPDF()
         pdf.add_page()
-        
-        # 폰트 파일이 있는지 확인하고 로드
-        font_path = "NanumGothic.ttf" # 파일이 같은 폴더에 있어야 함!
-        
-        if os.path.exists(font_path):
-            pdf.add_font('Nanum', '', font_path, unicode=True)
+        # 폰트 설정 (나눔고딕 파일이 실행 환경에 있어야 함)
+        try:
+            pdf.add_font('Nanum', '', 'NanumGothic.ttf', unicode=True)
             pdf.set_font('Nanum', '', 12)
-        else:
-            # 폰트가 없으면 기본 Arial로 영어만 나오게 (에러 방지용)
+        except:
             pdf.set_font("Arial", size=12)
-            text_content = "Font file missing. Please check NanumGothic.ttf on server."
-    
+       
         pdf.set_text_color(31, 41, 55)
-        pdf.multi_cell(0, 10, txt=text_content)
-        
-        # latin-1 에러 방지를 위해 'dest=S' 대신 바이트스트림 직접 처리
+        pdf.cell(200, 10, txt="AI PREMIUM STYLE REPORT", ln=True, align='C')
+        pdf.ln(10)
+       
+        clean_text = text_content.replace('#', '').strip()
+        pdf.multi_cell(0, 10, txt=clean_text)
         return pdf.output(dest='S').encode('latin-1', errors='replace')
 
         # --- 네이버 카페 연동 섹션 ---
@@ -212,5 +209,6 @@ if uploaded_file is not None:
                     st.warning("PDF 생성 중 글꼴 설정을 확인해 주세요.")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
