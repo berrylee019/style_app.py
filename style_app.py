@@ -127,7 +127,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 uploaded_file = st.file_uploader("분석할 영상을 업로드하세요 (MP4, MOV, AVI)", type=["mp4", "mov", "avi"])
 
 # Gemini 모델 설정 (1.5 Flash가 현재 안정적입니다)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 prompt = """
 당신은 세계 최고의 패션 스타일리스트이자 퍼스널 쇼퍼입니다.
 업로드된 영상을 분석하여 다음 항목을 포함한 '프리미엄 스타일 리포트'를 작성하세요.
@@ -209,3 +209,4 @@ if uploaded_file is not None:
                     st.warning("PDF 생성 중 글꼴 설정을 확인해 주세요.")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
