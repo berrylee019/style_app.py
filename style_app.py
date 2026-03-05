@@ -39,11 +39,17 @@ st.markdown("""
 
 # --- PDF 생성 함수 ---
 def create_pdf_file(text_content):
-    # 1. 기본 설정 (A4, 단위 mm, 여백 15mm로 넉넉하게)
+    # 1. 초기 설정 (A4, 단위 mm)
     pdf = FPDF(orientation='P', unit='mm', format='A4')
-    pdf.set_margins(left=15, top=15, right=15)
+    pdf.set_auto_page_break(auto=True, margin=20) # 자동 페이지 넘김 안전하게 설정
     pdf.add_page()
     
+    # 실제 글자가 써질 수 있는 최대 너비 계산 (좌우 여백 제외)
+    # A4(210mm) - 왼쪽여백(10) - 오른쪽여백(10) = 190mm
+    pdf.set_left_margin(10)
+    pdf.set_right_margin(10)
+    epw = pdf.w - pdf.l_margin - pdf.r_margin 
+
     # 2. 폰트 설정
     font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
@@ -53,58 +59,67 @@ def create_pdf_file(text_content):
         pdf.set_font("Arial", size=12)
 
     # --- [상단 헤더 디자인] ---
-    # 배경 사각형 (너비 210 전체를 덮도록)
-    pdf.set_fill_color(30, 58, 138)  # 네이비 (#1E3A8A)
+    # 배경 박스 (전체 너비 210)
+    pdf.set_fill_color(30, 58, 138) # 네이비
     pdf.rect(0, 0, 210, 45, 'F')
     
-    # 로고 (위치와 크기 미세 조정)
+    # 로고 이미지
     if os.path.exists("styley.png"):
-        pdf.image("styley.png", 15, 10, 22)
+        pdf.image("styley.png", 12, 10, 22)
     
-    pdf.set_text_color(255, 255, 255) # 흰색
+    # 헤더 텍스트 (text() 대신 cell()을 써서 너비를 안전하게 제한)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_xy(40, 15)
     pdf.set_font('Nanum', '', 22)
-    pdf.text(45, 25, "AI PREMIUM STYLE REPORT")
+    pdf.cell(epw - 30, 10, "AI PREMIUM STYLE REPORT", ln=True)
     
+    pdf.set_xy(40, 25)
     pdf.set_font('Nanum', '', 10)
-    pdf.text(45, 33, f"Issued Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    pdf.cell(epw - 30, 10, f"Issued: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
 
     # --- [본문 레이아웃] ---
-    pdf.set_y(50) # 헤더 아래로 이동
-    pdf.set_text_color(31, 41, 55) # 다크 그레이
+    pdf.set_y(50) 
+    pdf.set_text_color(31, 41, 55)
 
-    # 텍스트 데이터 파싱
-    lines = text_content.split('\n')
+    # 줄바꿈 처리 및 텍스트 정리
+    # 긴 문장이 잘리지 않도록 텍스트를 한 번 다듬어줍니다.
+    clean_content = text_content.replace('\r', '')
+    lines = clean_content.split('\n')
     
     for line in lines:
+        line = line.strip()
+        if not line:
+            pdf.ln(5)
+            continue
+            
         if line.startswith('#'):
-            pdf.ln(8)
-            # 섹션 제목 배경 박스 (너비 0은 현재 여백 내 전체 너비)
+            # 제목 섹션 (배경색 입히기)
+            pdf.ln(5)
             pdf.set_fill_color(241, 245, 249)
             pdf.set_font('Nanum', '', 14)
             title = line.replace('#', '').strip()
-            # 너비를 0으로 설정하여 안전하게 출력
-            pdf.cell(0, 12, f"  {title}", ln=True, fill=True)
+            # 너비를 epw로 딱 맞춰서 넘치지 않게 함
+            pdf.cell(epw, 12, f"  {title}", ln=True, fill=True)
             pdf.ln(3)
-        elif line.strip():
-            pdf.set_font('Nanum', '', 11)
-            clean_line = line.replace('-', '•').strip()
-            # multi_cell의 너비를 0으로 주면 여백 내에서 자동 줄바꿈을 합니다
-            pdf.multi_cell(0, 8, txt=clean_line)
         else:
-            pdf.ln(2)
+            # 일반 내용 (multi_cell로 자동 줄바꿈)
+            pdf.set_font('Nanum', '', 11)
+            # 불렛 포인트 정리
+            display_line = line.replace('-', '•').strip()
+            # 너비 epw를 명시하여 안전하게 출력
+            pdf.multi_cell(epw, 8, txt=display_line)
+            pdf.ln(1)
 
     # --- [푸터 디자인] ---
-    # 페이지 하단에서 20mm 위 지점
     pdf.set_y(-25)
-    pdf.set_draw_color(226, 232, 240)
-    pdf.line(15, pdf.get_y(), 195, pdf.get_y()) # 구분선
+    pdf.set_draw_color(200, 200, 200)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y()) # 하단 구분선
     pdf.ln(5)
     pdf.set_font('Nanum', '', 9)
-    pdf.set_text_color(148, 163, 184)
-    pdf.cell(0, 5, "본 리포트는 Microhard Style Lab의 인공지능에 의해 생성되었습니다.", ln=True, align='C')
-    pdf.cell(0, 5, "Copyright 2026. Microhard All rights reserved.", ln=True, align='C')
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(epw, 5, "본 리포트는 Microhard Style Lab AI에 의해 생성되었습니다.", ln=True, align='C')
+    pdf.cell(epw, 5, "Copyright 2026. Microhard All rights reserved.", ln=True, align='C')
 
-    # fpdf2는 output() 시 바이트 데이터를 반환함
     return pdf.output()
 # --- 헤더 섹션 (Styley 인사말) ---
 col_img, col_txt = st.columns([1, 4])
@@ -195,6 +210,7 @@ if uploaded_file is not None:
                     st.error(f"PDF 생성 중 글꼴 에러가 났구먼유: {e}")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
 
