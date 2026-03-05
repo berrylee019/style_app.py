@@ -9,34 +9,56 @@ import re
 try:
     genai.configure(api_key=st.secrets["MY_API_KEY"])
 except:
-    st.error("API 키 설정이 필요합니다요! secrets.toml을 확인해 주셔요.")
+    st.error("API 키 설정이 필요합니다요! .streamlit/secrets.toml을 확인해 주셔요.")
 
 # 페이지 설정
 st.set_page_config(page_title="AI 스타일 가이드", page_icon="👗", layout="centered")
 
-# --- [디자인] 커스텀 CSS ---
+# --- [디자인 그대로!] 커스텀 CSS ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
     html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
+    
     .main-title { font-size: 2.5rem; font-weight: 700; color: #1E3A8A; text-align: center; margin-bottom: 0.5rem; }
-    .tip-card { background-color: #f8fafc; border-radius: 10px; padding: 15px; border-left: 5px solid #3B82F6; margin-bottom: 10px; }
+    .sub-title { font-size: 1.1rem; color: #64748B; text-align: center; margin-bottom: 2rem; }
+    
+    .tip-card { 
+        background-color: #f8fafc; border-radius: 10px; padding: 20px; 
+        border-left: 5px solid #3B82F6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+        height: 100%; margin-bottom: 10px;
+    }
+    .tip-header { font-weight: 700; color: #1E40AF; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    
+    .stButton>button { 
+        width: 100%; border-radius: 8px; height: 3rem; 
+        background-color: #2563EB; color: white; font-weight: 700; border: none; transition: all 0.3s; 
+    }
+    .stButton>button:hover { background-color: #1E40AF; transform: translateY(-2px); }
     </style>
     """, unsafe_allow_html=True)
 
-# --- [기능] 프리미엄 PDF 생성 함수 (2.0 버전) ---
+# --- PDF 생성 함수 ---
 def create_pdf_file(text_content):
+    # --- 1. 텍스트 세탁기 (마크다운 및 지저분한 기호 제거) ---
     def clean_text(text):
-        text = text.replace('**', '').replace('__', '')
-        text = text.replace('* ', ' • ')
+        # 굵게 표시용 ** 제거
+        text = text.replace('**', '')
+        # 기울임용 * 제거
+        text = text.replace('* ', ' • ') # 리스트 기호는 깔끔한 점으로 변경
+        # 반복되는 마침표 (...) 정리
         text = re.sub(r'\.{2,}', '.', text)
+        # 기타 불필요한 특수문자 정리
+        text = text.replace('___', '')
         return text.strip()
 
+    # --- 2. PDF 기본 설정 ---
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.set_auto_page_break(auto=True, margin=25)
     pdf.add_page()
-    epw = pdf.w - 20 
-
+    
+    epw = pdf.w - 20 # 실사용 너비 (좌우 여백 10씩 제외)
+    
     font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
         pdf.add_font('Nanum', '', font_path)
@@ -44,95 +66,168 @@ def create_pdf_file(text_content):
     else:
         pdf.set_font("Arial", size=12)
 
-    # 헤더 디자인
-    pdf.set_fill_color(28, 35, 49) 
+    # --- 3. 프리미엄 헤더 디자인 ---
+    pdf.set_fill_color(28, 35, 49) # 더 깊이감 있는 다크 네이비
     pdf.rect(0, 0, 210, 45, 'F')
+    
     if os.path.exists("styley.png"):
         pdf.image("styley.png", 15, 12, 22)
     
     pdf.set_text_color(255, 255, 255)
     pdf.set_xy(45, 18)
-    pdf.set_font('Nanum', '', 22)
-    pdf.cell(0, 10, "PREMIUM STYLE ANALYSIS", ln=True)
+    pdf.set_font('Nanum', '', 24)
+    pdf.cell(0, 10, "STYLE ANALYSIS REPORT", ln=True)
+    
     pdf.set_font('Nanum', '', 10)
     pdf.set_xy(45, 28)
-    pdf.cell(0, 10, f"Microhard AI Lab | {datetime.now().strftime('%Y.%m.%d')}", ln=True)
+    pdf.cell(0, 10, f"Issued by Microhard AI Lab | {datetime.now().strftime('%Y.%m.%d')}", ln=True)
 
-    # 본문
+    # --- 4. 본문 레이아웃 ---
     pdf.set_y(55)
+    pdf.set_text_color(44, 62, 80) # 세련된 다크 그레이
+
     lines = text_content.split('\n')
+    
     for line in lines:
         raw_line = line.strip()
         if not raw_line:
             pdf.ln(4)
             continue
+            
         if raw_line.startswith('#'):
-            pdf.ln(5)
+            # [섹션 제목 스타일]
+            pdf.ln(6)
+            title_text = clean_text(raw_line.replace('#', ''))
             pdf.set_font('Nanum', '', 15)
-            pdf.set_text_color(30, 58, 138)
-            pdf.cell(epw, 10, clean_text(raw_line.replace('#', '')), ln=True)
-            pdf.line(10, pdf.get_y(), 50, pdf.get_y())
-            pdf.ln(3)
+            pdf.set_text_color(30, 58, 138) # 포인트 블루
+            pdf.set_draw_color(30, 58, 138)
+            pdf.set_line_width(0.5)
+            pdf.cell(epw, 10, title_text, ln=True)
+            pdf.line(10, pdf.get_y(), 60, pdf.get_y()) # 제목 아래 짧은 강조선
+            pdf.ln(4)
         else:
+            # [일반 본문 스타일]
             pdf.set_font('Nanum', '', 11)
             pdf.set_text_color(44, 62, 80)
-            pdf.multi_cell(epw, 7, txt=clean_text(raw_line))
-    
+            cleaned_line = clean_text(raw_line)
+            
+            # 줄 간격(leading)을 7로 주어 가독성 확보
+            pdf.multi_cell(epw, 7, txt=cleaned_line)
+            pdf.ln(1)
+
+    # --- 5. 푸터 (전문성 강조) ---
+    pdf.set_y(-30)
+    pdf.set_font('Nanum', '', 9)
+    pdf.set_text_color(160, 160, 160)
+    pdf.cell(0, 10, "This is an AI-generated professional opinion for fashion styling purposes.", ln=True, align='C')
+    pdf.set_draw_color(230, 230, 230)
+    pdf.line(20, pdf.get_y(), 190, pdf.get_y())
+    pdf.cell(0, 10, "Copyright 2026. Microhard All rights reserved.", ln=True, align='C')
+
     return pdf.output()
+# --- 헤더 섹션 (Styley 인사말) ---
+col_img, col_txt = st.columns([1, 4])
+with col_img:
+    if os.path.exists("styley.png"):
+        st.image("styley.png", width=110)
+    else:
+        st.write("🖼️")
 
-# --- [UI] 헤더 ---
+with col_txt:
+    st.markdown("""
+        <div style="position: relative; background: #E1F5FE; border-radius: 15px; padding: 15px; margin-top: 10px; border: 1px solid #B3E5FC;">
+            <strong style="color: #0288D1; font-size: 1.1rem;">Styley:</strong><br>
+            <span style="color: #333;">"반가워요 형님! 가이드 영상을 참고해서 360도 촬영본을 올려주셔요. <br>오늘의 베스트 룩을 찾아드릴게유! ✨"</span>
+            <div style="position: absolute; left: -10px; top: 20px; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid #E1F5FE;"></div>
+        </div>
+    """, unsafe_allow_html=True)
+
 st.markdown('<p class="main-title">👗 AI 스타일 가이드</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">실시간 비디오 분석으로 완성하는 당신만의 퍼스널 룩</p>', unsafe_allow_html=True)
 
-# --- [기능] 영상 업로드 ---
-uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "mov", "avi"])
+# --- 촬영 가이드 및 업로드 섹션 ---
+st.markdown("#### 📹 촬영 가이드 및 업로드")
+c_v, c_u = st.columns([1.2, 1])
 
+with c_v:
+    if os.path.exists("sample_guide.mp4"):
+        st.video("sample_guide.mp4")
+    else:
+        st.info("가이드 영상(sample_guide.mp4)을 준비해 주셔요!")
+
+with c_u:
+    uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "mov", "avi"])
+    if uploaded_file:
+        st.success("영상 준비 완료! 아래 분석 버튼을 눌러주셔요.")
+
+# --- 꿀팁 섹션 (카드형) ---
+st.markdown("<br>", unsafe_allow_html=True)
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown('<div class="tip-card"><div class="tip-header">👤 1. 전신 샷 필수</div>머리부터 발끝까지 화면에 다 들어와야 해요.</div><br><div class="tip-card"><div class="tip-header">🔄 2. 360도 회전</div>천천히 한 바퀴 돌아주시면 입체적 분석이 가능합니다.</div>', unsafe_allow_html=True)
+with col2:
+    st.markdown('<div class="tip-card"><div class="tip-header">💡 3. 밝은 조명</div>조명이 밝아야 컬러를 정확히 잡아내요.</div><br><div class="tip-card"><div class="tip-header">⏱️ 4. 5~15초 권장</div>너무 길면 업로드가 느려질 수 있어요.</div>', unsafe_allow_html=True)
+
+# --- 분석 실행 ---
 if uploaded_file is not None:
     st.divider()
     if 'analysis_result' not in st.session_state:
-        if st.button("✨ 프리미엄 스타일 분석 시작"):
-            with st.status("🔍 전문 컨설턴트 AI가 수치 분석 중...", expanded=True) as status:
+        if st.button("✨ AI 스타일 분석 시작"):
+            with st.status("🔍 AI가 스타일을 정밀 분석 중입니다...", expanded=True) as status:
                 try:
                     model = genai.GenerativeModel('gemini-2.5-flash')
                     video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
-                    
-                    # --- 형님이 요청하신 수치화 프롬프트 반영! ---
                     prompt = """
-                    당신은 수치 데이터에 기반한 최고급 패션 컨설턴트입니다. 
-                    영상을 분석하여 반드시 다음 항목들을 포함해 리포트해 주세요:
+                    당신은 최고급 패션 컨설턴트입니다. 
+                    영상을 분석하여 다음 4가지 항목으로 리포트해 주세요. 
+                    **나 * 같은 마크다운 기호를 절대 사용하지 마세요.**
                     
-                    # 1. 신체 비율 및 대칭성 분석
-                    - 상체와 하체의 비율을 수치(예: 4.2:5.8)로 제시하고 분석하세요.
-                    - 어깨 선의 대칭성 점수(100점 만점)와 불균형 여부를 진단하세요.
+                    # 1. 스타일 페르소나
+                    # 2. 체형 강점 분석
+                    # 3. 퍼스널 컬러 제안
+                    # 4. 오늘의 스타일링 팁
                     
-                    # 2. 색상 보완성(Complementary Color) 리포트
-                    - 현재 착용한 의상의 색상 조합 점수를 산출하세요.
-                    - 사용자의 피부톤과 대조되는 '보완색'을 추천하고 그 이유를 설명하세요.
-                    
-                    # 3. 종합 스타일링 제언
-                    - 위 수치를 바탕으로 가장 개선이 필요한 부분 1가지를 제언하세요.
-                    
-                    ** 이나 * 같은 마크다운 기호는 절대 사용하지 말고 깔끔한 문장으로 작성해 주세요.
+                    전문적인 비즈니스 용어를 사용하되, 문장은 깔끔하게 마침표로 끝내주세요.
                     """
-                    
                     response = model.generate_content([prompt, video_part])
                     st.session_state.analysis_result = response.text
                     status.update(label="✅ 분석 완료!", state="complete", expanded=False)
                 except Exception as e:
                     st.error(f"분석 오류: {e}")
 
-    # --- 결과 및 다운로드 ---
+    # --- 결과 출력 및 수익화 섹션 ---
     if 'analysis_result' in st.session_state:
-        st.subheader("📊 AI 프리미엄 수치 분석 리포트")
+        st.success("분석이 완료되었습니다!")
+        st.subheader("📊 AI 프리미엄 스타일 리포트")
         st.markdown(st.session_state.analysis_result)
+        st.balloons()
 
         st.divider()
-        input_pw = st.text_input("카페 비밀번호 입력 (style77)", type="password")
-        if input_pw == "style77":
-            pdf_data = create_pdf_file(st.session_state.analysis_result)
-            st.download_button(
-                label="📄 전문 PDF 리포트 다운로드",
-                data=bytes(pdf_data),
-                file_name=f"Premium_Report_{datetime.now().strftime('%m%d')}.pdf",
-                mime="application/pdf"
-            )
+        st.markdown("### 🚀 스타일 업그레이드 본부")
+        res_c1, res_c2 = st.columns([1.2, 1])
+        
+        with res_c1:
+            st.info("💡 **카페 회원 혜택**\n- 리포트 PDF 저장 가능\n- 코디 가이드북 즉시 증정")
+            st.link_button("☕ 카페에서 비번 확인하기", "https://cafe.naver.com/stylely")
+        
+        with res_c2:
+            input_pw = st.text_input("카페 비밀번호를 입력하세요", type="password")
+            if input_pw == "style77":
+                try:
+                    pdf_data = create_pdf_file(st.session_state.analysis_result)
+                    st.download_button(
+                        label="📄 PDF 리포트 다운로드",
+                        data=bytes(pdf_data),
+                        file_name=f"Style_Report_{datetime.now().strftime('%m%d')}.pdf",
+                        mime="application/pdf"
+                    )
+                except Exception as e:
+                    st.error(f"PDF 생성 중 글꼴 에러가 났구먼유: {e}")
+
+st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
+
+
+
+
 
