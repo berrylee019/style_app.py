@@ -92,7 +92,7 @@ if uploaded_file is not None:
         if st.button("✨ 프리미엄 스타일 분석 시작"):
             with st.status("🔍 전문 컨설턴트 AI가 수치 분석 중...", expanded=True) as status:
                 try:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    model = genai.GenerativeModel('gemini-2.5-flash')
                     video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                     
                     # --- 형님이 요청하신 수치화 프롬프트 반영! ---
@@ -135,3 +135,4 @@ if uploaded_file is not None:
                 file_name=f"Premium_Report_{datetime.now().strftime('%m%d')}.pdf",
                 mime="application/pdf"
             )
+
