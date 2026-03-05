@@ -41,21 +41,64 @@ st.markdown("""
 def create_pdf_file(text_content):
     pdf = FPDF()
     pdf.add_page()
-    font_path = "NanumGothic.ttf"
     
+    # 1. 폰트 설정
+    font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
         pdf.add_font('Nanum', '', font_path)
         pdf.set_font('Nanum', '', 12)
     else:
         pdf.set_font("Arial", size=12)
-        text_content = "Font file missing. Check NanumGothic.ttf"
 
-    pdf.set_text_color(31, 41, 55)
-    pdf.cell(200, 10, txt="AI PREMIUM STYLE REPORT", ln=True, align='C')
-    pdf.ln(10)
+    # --- [상단 헤더 디자인] ---
+    pdf.set_fill_color(30, 58, 138)  # 네이비 색상 (#1E3A8A)
+    pdf.rect(0, 0, 210, 40, 'F')     # 상단 배경 사각형
     
-    clean_text = text_content.replace('#', '').strip()
-    pdf.multi_cell(0, 10, txt=clean_text)
+    # 로고 추가 (파일이 있을 경우)
+    if os.path.exists("styley.png"):
+        pdf.image("styley.png", 10, 8, 25)
+    
+    pdf.set_text_color(255, 255, 255) # 흰색 글자
+    pdf.set_font('Nanum', '', 24)
+    pdf.text(45, 25, "AI PREMIUM STYLE REPORT")
+    
+    pdf.set_font('Nanum', '', 10)
+    pdf.text(45, 32, f"Issued Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+    # --- [본문 레이아웃] ---
+    pdf.ln(45) # 상단 여백 확보
+    pdf.set_text_color(31, 41, 55) # 다크 그레이 색상
+
+    # 텍스트 데이터 파싱 (제목별로 나누기)
+    lines = text_content.split('\n')
+    
+    for line in lines:
+        if line.startswith('#'): # 제목 부분 강조
+            pdf.ln(5)
+            # 섹션 제목 배경 박스
+            pdf.set_fill_color(241, 245, 249)
+            pdf.set_font('Nanum', '', 14)
+            title = line.replace('#', '').strip()
+            pdf.cell(0, 10, f"  {title}", ln=True, fill=True)
+            pdf.ln(2)
+        elif line.strip(): # 내용 부분
+            pdf.set_font('Nanum', '', 11)
+            # 불렛 포인트 효과
+            clean_line = line.replace('-', '•').strip()
+            pdf.multi_cell(0, 8, txt=f" {clean_line}")
+        else:
+            pdf.ln(2)
+
+    # --- [푸터 디자인] ---
+    pdf.set_y(-30)
+    pdf.set_draw_color(226, 232, 240)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y()) # 구분선
+    pdf.ln(5)
+    pdf.set_font('Nanum', '', 9)
+    pdf.set_text_color(148, 163, 184)
+    pdf.cell(0, 5, "본 리포트는 Microhard Style Lab의 인공지능에 의해 생성되었습니다.", ln=True, align='C')
+    pdf.cell(0, 5, "Copyright 2026. Microhard All rights reserved.", ln=True, align='C')
+
     return pdf.output()
 
 # --- 헤더 섹션 (Styley 인사말) ---
@@ -147,6 +190,7 @@ if uploaded_file is not None:
                     st.error(f"PDF 생성 중 글꼴 에러가 났구먼유: {e}")
 
 st.markdown("<br><br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
 
