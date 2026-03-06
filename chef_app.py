@@ -159,7 +159,8 @@ if 'chef_result' in st.session_state:
             st.session_state.pdf_unlocked = True
             st.rerun()
         # 💥 비밀번호 치고 엔터 치는 순간 일단 축하부터!
-        play_fireworks()
+        trigger_fireworks()
+        st.rerun()
         
         pdf_bytes = create_recipe_pdf(res)
         st.download_button(
@@ -168,3 +169,6 @@ if 'chef_result' in st.session_state:
             file_name="Chef_Report.pdf",
             mime="application/pdf"
         )
+
+        # 코드 가장 아래에 외롭게 혼자 두시면 됩니다요.
+        display_fireworks()
