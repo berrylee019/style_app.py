@@ -106,7 +106,7 @@ if uploaded_img:
     st.image(uploaded_img, caption="분석할 냉장고 재료", use_container_width=True)
     
     if st.button("🍴 레시피 대결 시작!"):
-        with st.status("👨‍🍳 셰프들이 재료를 검토 중입니다...", expanded=True) as status:):
+        with st.status("👨‍🍳 셰프들이 재료를 검토 중입니다...", expanded=True) as status:
             try:
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 img_data = uploaded_img.read()
