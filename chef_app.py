@@ -106,7 +106,7 @@ if uploaded_img:
     st.image(uploaded_img, caption="분석할 냉장고 재료", use_container_width=True)
     
     if st.button("🍴 레시피 대결 시작!"):
-        with st.spinner("👨‍🍳 셰프들이 재료를 검토 중입니다..."):
+        with st.status("👨‍🍳 셰프들이 재료를 검토 중입니다...", expanded=True) as status:):
             try:
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 img_data = uploaded_img.read()
@@ -141,6 +141,7 @@ if uploaded_img:
                 play_fireworks()
                 
                 status.update(label="✅ 셰프의 결정이 내려졌습니다!", state="complete", expanded=False)
+            
             except Exception as e:
                 st.error(f"오류 발생: {e}")
 
