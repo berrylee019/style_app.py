@@ -1,17 +1,15 @@
 import streamlit as st
 import google.generativeai as genai
 from fpdf import FPDF
-from datetime import datetime
 import os
 import re
 import streamlit.components.v1 as components
 
+# --- [기능] 불꽃놀이 시스템 ---
 def trigger_fireworks():
-    # 세션 스테이트를 이용해 불꽃놀이 실행 여부를 저장합니다요
     st.session_state.do_fireworks = True
 
 def display_fireworks():
-    # 실제로 화면에 불꽃을 쏘는 자바스크립트 (화면 맨 밑에 항상 대기)
     if st.session_state.get('do_fireworks', False):
         fireworks_js = """
         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -25,10 +23,9 @@ def display_fireworks():
         </script>
         """
         components.html(fireworks_js, height=0)
-        # 한 번 터졌으면 다시 꺼줘야 무한 반복 안 합니다요!
         st.session_state.do_fireworks = False
-    
-# 1. API 키 및 페이지 설정
+
+# --- [설정] API 키 및 페이지 ---
 try:
     genai.configure(api_key=st.secrets["MY_API_KEY"])
 except:
@@ -36,35 +33,23 @@ except:
 
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
 
-# --- [디자인] 흑백 테마 CSS ---
-# --- [UI 개선 코드 조각] ---
-st.markdown('<p class="main-title">👨‍🍳 Microhard AI 흑백요리사</p>', unsafe_allow_html=True)
+# --- [디자인] 럭셔리 흑백 테마 CSS ---
+st.markdown("""
+    <style>
+    .main-title { font-size: 2.5rem; font-weight: 800; color: #111827; text-align: center; margin-bottom: 20px; }
+    .stButton>button { width: 100%; border-radius: 10px; height: 3rem; background-color: #111827; color: white; }
+    .stInfo { border-radius: 15px; border-left: 10px solid #111827; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# 전문가 가이드 영역
-st.info("""
-    **💡 이용 방법:**
-    1. 냉장고 안의 재료가 잘 보이도록 촬영해 주세요.
-    2. AI가 재료를 분석하여 **영양 중심(백수저)**과 **가성비(흑수저)** 레시피를 제안합니다.
-    3. 본인의 체형 분석 데이터와 연동되어 최적의 칼로리를 계산해 드립니다.
-""")
-
-# 콜 투 액션(CTA) 강화
-with st.expander("❓ 왜 AI 흑백요리사를 써야 하나요?"):
-    st.write("- 낭비되는 식재료 제로(Zero Waste)")
-    st.write("- 내 몸에 딱 맞는 탄/단/지 비율 계산")
-    st.write("- 전문 요리사의 킥(Kick)이 담긴 레시피")
-
-# --- [기능] 프리미엄 PDF 리포트 생성 (chef 버전) ---
+# --- [기능] PDF 생성 엔진 ---
 def create_recipe_pdf(content):
     def clean_text(text):
-        # 불필요한 마크다운 기호 완벽 제거
-        text = re.sub(r'\*\*|\*|__|#', '', text)
-        return text.strip()
+        return re.sub(r'\*\*|\*|__|#', '', text).strip()
 
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
-    epw = pdf.w - 20
     
     font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
@@ -72,97 +57,77 @@ def create_recipe_pdf(content):
         pdf.set_font('Nanum', '', 12)
     else: pdf.set_font("Arial", size=12)
 
-    # 헤더 디자인 (블랙 & 골드 느낌으로 고급화)
     pdf.set_fill_color(17, 24, 39) 
     pdf.rect(0, 0, 210, 40, 'F')
     pdf.set_text_color(255, 255, 255)
-    pdf.set_font('Nanum', '', 20)
     pdf.text(15, 25, "AI BLACK & WHITE CHEF REPORT")
     
     pdf.set_y(50)
     pdf.set_text_color(31, 41, 55)
-    
-    # 본문 출력 (세탁기 돌린 텍스트)
-    pdf.multi_cell(epw, 8, txt=clean_text(content))
-    
+    pdf.multi_cell(0, 8, txt=clean_text(content))
     return pdf.output()
 
 # --- [UI] 메인 화면 ---
-st.markdown('<p class="main-title">👨‍🍳 AI 흑백요리사 (영양사)</p>', unsafe_allow_html=True)
-st.write("냉장고 사진을 찍어 올리시면, 형님의 체형에 맞는 '생존 레시피'가 펼쳐집니다요!")
+st.markdown('<p class="main-title">👨‍🍳 Microhard AI 흑백요리사</p>', unsafe_allow_html=True)
+
+st.info("""
+    **💡 이용 방법:**
+    1. 냉장고 안의 재료 사진을 올려주셔요.
+    2. AI가 **백수저(영양)** vs **흑수저(맛/속도)** 대결 레시피를 제안합니다.
+    3. 형님의 체형에 딱 맞는 최적의 식단을 확인해 보셔요!
+""")
+
+with st.expander("❓ 서비스 특징"):
+    st.write("- 식재료 최적 활용 가이드")
+    st.write("- 맞춤형 탄/단/지 비율 분석")
+    st.write("- 셰프의 킥이 담긴 서바이벌 레시피")
 
 # --- [기능] 사진 업로드 및 분석 ---
 uploaded_img = st.file_uploader("냉장고 재료 사진을 올려주셔요", type=["jpg", "jpeg", "png"])
 
 if uploaded_img:
-    st.image(uploaded_img, caption="분석할 냉장고 재료", use_container_width=True)
+    st.image(uploaded_img, caption="분석할 재료", use_container_width=True)
     
     if st.button("🍴 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 검토 중입니다...", expanded=True) as status:
             try:
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                # 1. 모델명 수정 (gemini-1.5-flash가 현재 표준입니다요)
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
                 
-                # 전문 영양 분석 및 흑백 대결 프롬프트
-                prompt = """
-                당신은 사진 속 식재료를 완벽히 식별하는 AI 흑백요리사 영양사입니다. 
-                다음 순서로 리포트해 주세요 (마크다운 기호는 절대 쓰지 마세요):
-
-                1. 식별된 재료 리스트: 사진에서 확인된 모든 재료를 나열하세요.
-                
-                2. [백수저 모드] - 영양 완벽형:
-                - 보유 재료 중 가장 건강한 조합으로 조리법 제안.
-                - 예상 칼로리와 탄/단/지 비율 수치화.
-                - 체형 관리(다이어트) 포인트 설명.
-
-                3. [흑수저 모드] - 맛과 속도 중심:
-                - 가장 빠르고 맛있게 먹을 수 있는 자취생/서바이벌형 조리법.
-                - 자극적이지 않으면서도 만족도가 높은 킥(Kick) 포인트 전수.
-
-                전문적이고 자신감 넘치는 셰프의 톤으로 작성하세요.
-                """
+                prompt = """당신은 AI 흑백요리사 영양사입니다. 다음 순서로 리포트하세요(마크다운 기호 금지):
+                1. 식별된 재료 리스트
+                2. [백수저 모드] - 영양 완벽형 (조리법, 칼로리, 탄단지 비율)
+                3. [흑수저 모드] - 맛과 속도 중심 (빠른 조리법, 셰프의 킥)"""
                 
                 response = model.generate_content([prompt, img_part])
                 st.session_state.chef_result = response.text
-                status.update(label="✅ 분석 완료!", state="complete", expanded=False)
-
-                # 💥 발사대 가동!
+                
+                status.update(label="✅ 분석 완료! 결투 결과가 나왔습니다!", state="complete", expanded=False)
+                
+                # 2. 분석 완료 후 불꽃놀이 예약 및 리런
                 trigger_fireworks()
-                st.rerun() # 화면을 한 번 강제로 새로고침해서 불꽃을 보여줍니다요!
-                # ... 이전 분석 코드 ...
-                response = model.generate_content([prompt, img_part])
-                st.session_state.chef_result = response.text
-                
-                # ✨ 여기서 불꽃놀이 시작!
-                play_fireworks()
-                
-                status.update(label="✅ 셰프의 결정이 내려졌습니다!", state="complete", expanded=False)
-            
+                st.rerun()
+
             except Exception as e:
                 st.error(f"오류 발생: {e}")
 
 # --- [UI] 분석 결과 전시 ---
 if 'chef_result' in st.session_state:
     st.divider()
-    res = st.session_state.chef_result
-    
-    # 화면에는 백/흑 느낌 살려서 출력
     st.subheader("🏁 셰프들의 제안")
-    st.markdown(res) # 화면에 출력
+    st.write(st.session_state.chef_result)
 
-    # 비밀번호 및 PDF 다운로드
     input_pw = st.text_input("리포트 잠금해제 (style77)", type="password")
     if input_pw == "style77":
+        # 비밀번호 인증 시 불꽃놀이 한 번 더! (처음 한 번만 실행되도록 체크)
         if not st.session_state.get('pdf_unlocked', False):
-            trigger_fireworks() # 💥 비번 맞으면 팡팡!
             st.session_state.pdf_unlocked = True
+            trigger_fireworks()
             st.rerun()
-        # 💥 비밀번호 치고 엔터 치는 순간 일단 축하부터!
-        trigger_fireworks()
-        st.rerun()
-        
-        pdf_bytes = create_recipe_pdf(res)
+            
+        pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
         st.download_button(
             label="📄 흑백요리사 식단 리포트 다운로드",
             data=bytes(pdf_bytes),
@@ -170,5 +135,5 @@ if 'chef_result' in st.session_state:
             mime="application/pdf"
         )
 
-        # 코드 가장 아래에 외롭게 혼자 두시면 됩니다요.
-        display_fireworks()
+# --- [마무리] 불꽃놀이 실행 (항상 맨 아래 대기) ---
+display_fireworks()
