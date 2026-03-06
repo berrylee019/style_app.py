@@ -6,39 +6,27 @@ import os
 import re
 import streamlit.components.v1 as components
 
-def play_fireworks():
-    # 더 확실하게 터지는 canvas-confetti 설정
-    fireworks_js = """
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script>
-        // 무조건 터지도록 즉시 실행 함수로 구성
-        (function() {
-            var end = Date.now() + (3 * 1000); // 3초간 발사
-            (function frame() {
-              confetti({
-                particleCount: 5,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                zIndex: 9999
-              });
-              confetti({
-                particleCount: 5,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                zIndex: 9999
-              });
+def trigger_fireworks():
+    # 세션 스테이트를 이용해 불꽃놀이 실행 여부를 저장합니다요
+    st.session_state.do_fireworks = True
 
-              if (Date.now() < end) {
-                requestAnimationFrame(frame);
-              }
-            }());
-        })();
-    </script>
-    """
-    # height=0으로 해서 UI에는 안 보이지만 스크립트는 돌아가게 합니다요
-    components.html(fireworks_js, height=0)
+def display_fireworks():
+    # 실제로 화면에 불꽃을 쏘는 자바스크립트 (화면 맨 밑에 항상 대기)
+    if st.session_state.get('do_fireworks', False):
+        fireworks_js = """
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        <script>
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                zIndex: 9999
+            });
+        </script>
+        """
+        components.html(fireworks_js, height=0)
+        # 한 번 터졌으면 다시 꺼줘야 무한 반복 안 합니다요!
+        st.session_state.do_fireworks = False
     
 # 1. API 키 및 페이지 설정
 try:
@@ -138,7 +126,10 @@ if uploaded_img:
                 response = model.generate_content([prompt, img_part])
                 st.session_state.chef_result = response.text
                 status.update(label="✅ 분석 완료!", state="complete", expanded=False)
-                
+
+                # 💥 발사대 가동!
+                trigger_fireworks()
+                st.rerun() # 화면을 한 번 강제로 새로고침해서 불꽃을 보여줍니다요!
                 # ... 이전 분석 코드 ...
                 response = model.generate_content([prompt, img_part])
                 st.session_state.chef_result = response.text
@@ -163,6 +154,10 @@ if 'chef_result' in st.session_state:
     # 비밀번호 및 PDF 다운로드
     input_pw = st.text_input("리포트 잠금해제 (style77)", type="password")
     if input_pw == "style77":
+        if not st.session_state.get('pdf_unlocked', False):
+        trigger_fireworks() # 💥 비번 맞으면 팡팡!
+        st.session_state.pdf_unlocked = True
+        st.rerun()
         # 💥 비밀번호 치고 엔터 치는 순간 일단 축하부터!
         play_fireworks()
         
