@@ -69,7 +69,7 @@ if uploaded_img:
     if st.button("🍴 레시피 대결 시작!"):
         with st.spinner("👨‍🍳 셰프들이 재료를 검토 중입니다..."):
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
                 
