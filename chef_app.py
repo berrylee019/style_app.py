@@ -155,9 +155,9 @@ if 'chef_result' in st.session_state:
     input_pw = st.text_input("리포트 잠금해제 (style77)", type="password")
     if input_pw == "style77":
         if not st.session_state.get('pdf_unlocked', False):
-        trigger_fireworks() # 💥 비번 맞으면 팡팡!
-        st.session_state.pdf_unlocked = True
-        st.rerun()
+            trigger_fireworks() # 💥 비번 맞으면 팡팡!
+            st.session_state.pdf_unlocked = True
+            st.rerun()
         # 💥 비밀번호 치고 엔터 치는 순간 일단 축하부터!
         play_fireworks()
         
