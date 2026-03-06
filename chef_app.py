@@ -14,14 +14,22 @@ except:
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
 
 # --- [디자인] 흑백 테마 CSS ---
-st.markdown("""
-    <style>
-    .main-title { font-size: 2.2rem; font-weight: 800; color: #111827; text-align: center; }
-    .chef-card { padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
-    .baek-spoon { border-left: 10px solid #ffffff; background-color: #f9fafb; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .heuk-spoon { border-left: 10px solid #1f2937; background-color: #111827; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
+# --- [UI 개선 코드 조각] ---
+st.markdown('<p class="main-title">👨‍🍳 Microhard AI 흑백요리사</p>', unsafe_allow_html=True)
+
+# 전문가 가이드 영역
+st.info("""
+    **💡 이용 방법:**
+    1. 냉장고 안의 재료가 잘 보이도록 촬영해 주세요.
+    2. AI가 재료를 분석하여 **영양 중심(백수저)**과 **가성비(흑수저)** 레시피를 제안합니다.
+    3. 형님의 체형 분석 데이터와 연동되어 최적의 칼로리를 계산해 드립니다.
+""")
+
+# 콜 투 액션(CTA) 강화
+with st.expander("❓ 왜 AI 흑백요리사를 써야 하나요?"):
+    st.write("- 낭비되는 식재료 제로(Zero Waste)")
+    st.write("- 내 몸에 딱 맞는 탄/단/지 비율 계산")
+    st.write("- 전문 요리사의 킥(Kick)이 담긴 레시피")
 
 # --- [기능] 프리미엄 PDF 리포트 생성 (chef 버전) ---
 def create_recipe_pdf(content):
