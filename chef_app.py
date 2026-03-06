@@ -4,7 +4,38 @@ from fpdf import FPDF
 from datetime import datetime
 import os
 import re
+import streamlit.components.v1 as components
 
+def play_fireworks():
+    # 자바스크립트 폭죽 라이브러리를 이용한 불꽃놀이 효과
+    fireworks_js = """
+    <canvas id="fireworksCanvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        var duration = 5 * 1000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        function randomInRange(min, max) {
+          return Math.random() * (max - min) + min;
+        }
+
+        var interval = setInterval(function() {
+          var timeLeft = animationEnd - Date.now();
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+
+          var particleCount = 50 * (timeLeft / duration);
+          // 불꽃이 양쪽에서 터지는 효과
+          confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+          confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    </script>
+    """
+    components.html(fireworks_js, height=0)
+    
 # 1. API 키 및 페이지 설정
 try:
     genai.configure(api_key=st.secrets["MY_API_KEY"])
@@ -102,7 +133,14 @@ if uploaded_img:
                 
                 response = model.generate_content([prompt, img_part])
                 st.session_state.chef_result = response.text
+                # ... 이전 분석 코드 ...
+                response = model.generate_content([prompt, img_part])
+                st.session_state.chef_result = response.text
                 
+                # ✨ 여기서 불꽃놀이 시작!
+                play_fireworks()
+                
+                status.update(label="✅ 셰프의 결정이 내려졌습니다!", state="complete", expanded=False)
             except Exception as e:
                 st.error(f"오류 발생: {e}")
 
