@@ -52,7 +52,7 @@ if uploaded_img:
     if st.button("🔥 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 분석 중...", expanded=True) as status:
             try:
-                model = genai.GenerativeModel('models/gemini-1.5-flash')
+                model = genai.GenerativeModel('models/gemini-2.5-flash')
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
                 # 수익형 블로그를 위해 SEO에 유리한 형식을 AI에게 지시합니다요!
