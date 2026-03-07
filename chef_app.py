@@ -38,6 +38,7 @@ except:
     st.error("API 키 설정이 필요합니다요!")
 
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
+display_fireworks()
 
 # --- [3. 디자인 CSS] ---
 st.markdown("""
@@ -112,4 +113,4 @@ if 'chef_result' in st.session_state:
         )
 
 # --- [7. 마무리: 불꽃놀이 실행기] ---
-display_fireworks()
+
