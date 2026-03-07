@@ -91,7 +91,7 @@ if uploaded_img:
     if st.button("🔥 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 엄선하고 있습니다요...", expanded=True) as status:
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
                 
