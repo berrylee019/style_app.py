@@ -200,9 +200,10 @@ if st.session_state.chef_result:
         with col2:
             blog_title = "AI가 제안하는 냉장고 파먹기 역전 레시피!"
             if st.button("🚀 워드프레스에 즉시 포스팅"):
-                with st.spinner("포스팅 전송 중..."):
-                    if post_to_wordpress(blog_title, st.session_state.chef_result):
-                        st.success("💰 워드프레스 발행 성공! 수익 가즈아!")
+                with st.spinner("이미지 포함 전문 포스팅 전송 중..."):
+                    # ✅ 새로 만든 _pro 함수를 호출하고, 업로드된 이미지(uploaded_img)를 넘겨줍니다요!
+                    if post_to_wordpress_pro(blog_title, st.session_state.chef_result, uploaded_img.getvalue()):
+                        st.success("💰 썸네일과 수익 링크가 포함된 포스팅 성공!")
                         play_celebration()
                     else:
                         st.error("❌ 발행 실패. 설정을 확인하셔요.")
