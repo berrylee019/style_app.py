@@ -5,21 +5,16 @@ import os
 import re
 import streamlit.components.v1 as components
 
-# --- [1. 축하 시스템: 풍선 + 확실한 폭죽] ---
+# --- [1. 축하 시스템] ---
 def play_celebration():
-    # 1. 풍선 (스트림릿 내장 기능)
     st.balloons()
-    
-    # 2. 폭죽 (Canvas-Confetti 즉시 실행형)
     confetti_js = """
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
         var count = 200;
         var defaults = { origin: { y: 0.7 }, zIndex: 10000 };
         function fire(particleRatio, opts) {
-          confetti(Object.assign({}, defaults, opts, {
-            particleCount: Math.floor(count * particleRatio)
-          }));
+          confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) }));
         }
         fire(0.25, { spread: 26, startVelocity: 55 });
         fire(0.2, { spread: 60 });
@@ -30,33 +25,22 @@ def play_celebration():
     """
     components.html(confetti_js, height=1)
 
-# --- [2. 세션 및 설정] ---
-if 'chef_result' not in st.session_state:
-    st.session_state.chef_result = None
-if 'unlocked' not in st.session_state:
-    st.session_state.unlocked = False
+# --- [2. 설정] ---
+if 'chef_result' not in st.session_state: st.session_state.chef_result = None
+if 'unlocked' not in st.session_state: st.session_state.unlocked = False
 
-# API 키 설정 (오류 방지용 try-except)
 try:
-    genai.configure(api_key=st.secrets["MY_API_KEY"])
+    # API 키 설정
+    api_key = st.secrets["MY_API_KEY"]
+    genai.configure(api_key=api_key)
 except Exception as e:
-    st.error(f"⚠️ API 키 설정 오류: {e}")
+    st.error(f"⚠️ API 키 설정 확인 필요: {e}")
 
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
 
-# --- [3. 디자인 스타일 CSS] ---
-st.markdown("""
-    <style>
-    .main-title { font-size: 2.8rem; font-weight: 800; color: #111827; text-align: center; }
-    .stButton>button { width: 100%; border-radius: 12px; height: 3.5rem; background-color: #111827; color: white; font-weight: bold; }
-    .stDownloadButton>button { width: 100%; border-radius: 12px; background-color: #059669; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- [4. PDF 생성 함수] ---
+# --- [3. PDF 생성기] ---
 def create_recipe_pdf(content):
-    def clean_text(text):
-        return re.sub(r'\*\*|\*|__|#', '', text).strip()
+    def clean_text(text): return re.sub(r'\*\*|\*|__|#', '', text).strip()
     pdf = FPDF()
     pdf.add_page()
     font_path = "NanumGothic.ttf"
@@ -64,65 +48,41 @@ def create_recipe_pdf(content):
         pdf.add_font('Nanum', '', font_path)
         pdf.set_font('Nanum', '', 12)
     else: pdf.set_font("Arial", size=12)
-    
-    pdf.set_fill_color(17, 24, 39)
-    pdf.rect(0, 0, 210, 40, 'F')
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font(pdf.font_family, size=20)
-    pdf.text(15, 25, "AI BLACK & WHITE CHEF REPORT")
-    
-    pdf.set_y(50)
-    pdf.set_text_color(31, 41, 55)
-    pdf.set_font(pdf.font_family, size=11)
-    pdf.multi_cell(0, 8, txt=clean_text(content))
+    pdf.set_fill_color(17, 24, 39); pdf.rect(0, 0, 210, 40, 'F')
+    pdf.set_text_color(255, 255, 255); pdf.set_font(pdf.font_family, size=20); pdf.text(15, 25, "AI BLACK & WHITE CHEF REPORT")
+    pdf.set_y(50); pdf.set_text_color(31, 41, 55); pdf.set_font(pdf.font_family, size=11); pdf.multi_cell(0, 8, txt=clean_text(content))
     return pdf.output()
 
-# --- [5. 메인 UI 및 분석 로직] ---
-st.markdown('<p class="main-title">👨‍🍳 Microhard AI 흑백요리사</p>', unsafe_allow_html=True)
-st.info("💡 냉장고 사진을 찍어 올리시면 AI 셰프들이 대결을 시작합니다요!")
-
+# --- [4. 메인 UI] ---
+st.markdown('<h1 style="text-align: center;">👨‍🍳 Microhard AI 흑백요리사</h1>', unsafe_allow_html=True)
 uploaded_img = st.file_uploader("📸 냉장고 사진 업로드", type=["jpg", "jpeg", "png"])
 
 if uploaded_img:
-    st.image(uploaded_img, caption="분석할 재료", use_container_width=True)
-    
+    st.image(uploaded_img, use_container_width=True)
     if st.button("🔥 레시피 대결 시작!"):
-        with st.status("👨‍🍳 셰프들이 재료를 검토 중입니다...", expanded=True) as status:
+        with st.status("👨‍🍳 셰프들이 재료를 분석 중...", expanded=True) as status:
             try:
-                # ✅ 모델명 오타 수정: flesh -> flash
+                # ✅ 가장 호환성 높은 모델명으로 호출합니다요!
                 model = genai.GenerativeModel('gemini-1.5-flash')
+                
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
+                prompt = "사진 속 재료를 분석해서 영양 위주의 백수저 레시피와 맛 위주의 흑수저 레시피를 제안해줘. 마크다운 기호 없이!"
                 
-                prompt = "식재료를 분석해 백수저(영양), 흑수저(맛) 레시피를 제안해줘. 마크다운 기호 없이!"
                 response = model.generate_content([prompt, img_part])
                 st.session_state.chef_result = response.text
-                status.update(label="✅ 분석 완료! 결투 결과가 나왔습니다!", state="complete", expanded=False)
                 
-                # 🎉 분석 성공 시 폭죽 팡팡!
+                status.update(label="✅ 분석 완료!", state="complete", expanded=False)
                 play_celebration()
-                
             except Exception as e:
-                st.error(f"오류 발생: {e}")
+                st.error(f"🚨 모델 호출 오류: {e}")
+                st.info("💡 해결법: 깃허브의 requirements.txt 파일에 google-generativeai>=0.7.0 를 추가해 보셔요!")
 
-# --- [6. 결과 출력 및 다운로드 영역] ---
 if st.session_state.chef_result:
-    st.divider()
-    st.subheader("🏁 AI 셰프들의 제안")
-    st.write(st.session_state.chef_result)
-    
-    st.divider()
+    st.divider(); st.subheader("🏁 AI 셰프들의 요리 제안"); st.write(st.session_state.chef_result)
     input_pw = st.text_input("🔑 리포트 잠금해제 (style77)", type="password")
-    
     if input_pw == "style77":
         if not st.session_state.unlocked:
-            play_celebration() # 비밀번호 맞을 때도 축하!
-            st.session_state.unlocked = True
-            
+            play_celebration(); st.session_state.unlocked = True
         pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
-        st.download_button(
-            label="📄 흑백요리사 식단 리포트 다운로드",
-            data=bytes(pdf_bytes),
-            file_name="Chef_Report.pdf",
-            mime="application/pdf"
-        )
+        st.download_button(label="📄 PDF 리포트 다운로드", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
