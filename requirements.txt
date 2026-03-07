@@ -3,5 +3,5 @@ streamlit
 Pillow
 opencv-python
 fpdf2
-
-
+markdown
+requests
