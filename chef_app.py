@@ -61,8 +61,11 @@ if uploaded_img:
     if st.button("🔥 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 분석 중...", expanded=True) as status:
             try:
-                # ✅ 'gemini-1.5-flash' 모델을 정확하게 호출합니다요!
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # ✅ 가장 호환성 높은 최신 모델명을 순차적으로 시도합니다요!
+                try:
+                    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                except:
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
@@ -74,4 +77,14 @@ if uploaded_img:
                 status.update(label="✅ 분석 완료!", state="complete", expanded=False)
                 play_celebration()
             except Exception as e:
-                st.error(f"🚨 오류 발생: {e}")
+                st.error(f"🚨 모델 호출 오류: {e}")
+                st.info("💡 해결법: 아까 말씀드린 'Reboot app'을 꼭 눌러주셔야 새 라이브러리가 적용됩니다요!")
+
+if st.session_state.chef_result:
+    st.divider(); st.subheader("🏁 AI 셰프들의 요리 제안"); st.write(st.session_state.chef_result)
+    input_pw = st.text_input("🔑 리포트 잠금해제 (style77)", type="password")
+    if input_pw == "style77":
+        if not st.session_state.unlocked:
+            play_celebration(); st.session_state.unlocked = True
+        pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
+        st.download_button(label="📄 PDF 리포트 다운로드", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
