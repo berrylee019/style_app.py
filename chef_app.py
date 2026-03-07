@@ -61,11 +61,8 @@ if uploaded_img:
     if st.button("🔥 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 분석 중...", expanded=True) as status:
             try:
-                # ✅ 가장 호환성 높은 최신 모델명을 순차적으로 시도합니다요!
-                try:
-                    model = genai.GenerativeModel('gemini-1.5-flash-latest')
-                except:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                # ✅ 가장 확실한 전체 경로 모델명을 사용합니다!
+                model = genai.GenerativeModel('models/gemini-1.5-flash')
                 
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
@@ -78,7 +75,7 @@ if uploaded_img:
                 play_celebration()
             except Exception as e:
                 st.error(f"🚨 모델 호출 오류: {e}")
-                st.info("💡 해결법: 아까 말씀드린 'Reboot app'을 꼭 눌러주셔야 새 라이브러리가 적용됩니다요!")
+                st.info("💡 해결법: 오른쪽 점 세 개 버튼 눌러서 'Reboot App'을 꼭 하셔야 새 라이브러리가 적용됩니다요!")
 
 if st.session_state.chef_result:
     st.divider(); st.subheader("🏁 AI 셰프들의 요리 제안"); st.write(st.session_state.chef_result)
