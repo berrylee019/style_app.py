@@ -294,34 +294,34 @@ if st.session_state.chef_result:
         st.success("✅ 회원님, 오늘의 맞춤 리포트가 준비되었습니다!")
 
     # B. 관리자(형님) 모드 (master77 입력 시)
-        elif access_key == "master77":
-            st.warning("😎 관리자 전용: 콘텐츠 곡간(구글 시트) 관리 모드")
-            
-            # 1. 시트에서 목록 불러오기 버튼
-            if st.button("📦 곡간에서 미발행 레시피 불러오기"):
-                pending_list, sheet = get_pending_recipes()
-                st.session_state.pending_recipes = pending_list
-                st.success(f"총 {len(pending_list)}개의 새 레시피를 찾았습니다요!")
-    
-            # 2. 불러온 목록이 있다면 화면에 출력
-            if 'pending_recipes' in st.session_state and st.session_state.pending_recipes:
-                for idx, item in enumerate(st.session_state.pending_recipes):
-                    with st.expander(f"📌 [{item['날짜']}] {item['레시피제목']}"):
-                        st.write(f"**분석된 재료:** {item['분석된재료']}")
-                        st.markdown("---")
-                        # 수정 가능한 제목과 본문
-                        new_title = st.text_input(f"제목 수정 ({idx})", value=item['레시피제목'], key=f"title_{idx}")
-                        new_content = st.text_area(f"본문 수정 ({idx})", value=item['레시피내용'], height=200, key=f"content_{idx}")
-                        
-                        if st.button(f"🚀 이 글 바로 포스팅하기 ({idx})", key=f"btn_{idx}"):
-                            with st.spinner("워드프레스 전송 및 시트 업데이트 중..."):
-                                # 워드프레스 포스팅 실행 (썸네일은 일단 생략하거나 기본값 사용)
-                                success = post_to_wordpress_pro(new_title, new_content, None) 
-                                if success:
-                                    # 성공 시 구글 시트의 '포스팅여부'를 'Yes'로 변경!
-                                    _, sheet = get_pending_recipes()
-                                    sheet.update_cell(item['row_idx'], 5, "Yes") # 5번째 열이 '포스팅여부'
-                                    st.success("💰 포스팅 성공 및 곡간 업데이트 완료!")
-                                    st.rerun() # 화면 새로고침
-                                else:
-                                    st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
+    elif access_key == "master77":
+        st.warning("😎 관리자 전용: 콘텐츠 곡간(구글 시트) 관리 모드")
+        
+        # 1. 시트에서 목록 불러오기 버튼
+        if st.button("📦 곡간에서 미발행 레시피 불러오기"):
+            pending_list, sheet = get_pending_recipes()
+            st.session_state.pending_recipes = pending_list
+            st.success(f"총 {len(pending_list)}개의 새 레시피를 찾았습니다요!")
+
+        # 2. 불러온 목록이 있다면 화면에 출력
+        if 'pending_recipes' in st.session_state and st.session_state.pending_recipes:
+            for idx, item in enumerate(st.session_state.pending_recipes):
+                with st.expander(f"📌 [{item['날짜']}] {item['레시피제목']}"):
+                    st.write(f"**분석된 재료:** {item['분석된재료']}")
+                    st.markdown("---")
+                    # 수정 가능한 제목과 본문
+                    new_title = st.text_input(f"제목 수정 ({idx})", value=item['레시피제목'], key=f"title_{idx}")
+                    new_content = st.text_area(f"본문 수정 ({idx})", value=item['레시피내용'], height=200, key=f"content_{idx}")
+                    
+                    if st.button(f"🚀 이 글 바로 포스팅하기 ({idx})", key=f"btn_{idx}"):
+                        with st.spinner("워드프레스 전송 및 시트 업데이트 중..."):
+                            # 워드프레스 포스팅 실행 (썸네일은 일단 생략하거나 기본값 사용)
+                            success = post_to_wordpress_pro(new_title, new_content, None) 
+                            if success:
+                                # 성공 시 구글 시트의 '포스팅여부'를 'Yes'로 변경!
+                                _, sheet = get_pending_recipes()
+                                sheet.update_cell(item['row_idx'], 5, "Yes") # 5번째 열이 '포스팅여부'
+                                st.success("💰 포스팅 성공 및 곡간 업데이트 완료!")
+                                st.rerun() # 화면 새로고침
+                            else:
+                                st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
