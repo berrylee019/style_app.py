@@ -90,7 +90,7 @@ if uploaded_img:
         with st.status("👨‍🍳 셰프들이 재료를 검토 중입니다...", expanded=True) as status:
             try:
                 # ✅ 모델명 오타 수정: flesh -> flash
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
                 
