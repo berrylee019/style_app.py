@@ -30,7 +30,6 @@ if 'chef_result' not in st.session_state: st.session_state.chef_result = None
 if 'unlocked' not in st.session_state: st.session_state.unlocked = False
 
 try:
-    # API 키 설정
     api_key = st.secrets["MY_API_KEY"]
     genai.configure(api_key=api_key)
 except Exception as e:
@@ -62,7 +61,7 @@ if uploaded_img:
     if st.button("🔥 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 분석 중...", expanded=True) as status:
             try:
-                # ✅ 가장 호환성 높은 모델명으로 호출합니다요!
+                # ✅ 'gemini-1.5-flash' 모델을 정확하게 호출합니다요!
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 img_data = uploaded_img.read()
@@ -75,14 +74,4 @@ if uploaded_img:
                 status.update(label="✅ 분석 완료!", state="complete", expanded=False)
                 play_celebration()
             except Exception as e:
-                st.error(f"🚨 모델 호출 오류: {e}")
-                st.info("💡 해결법: 깃허브의 requirements.txt 파일에 google-generativeai>=0.7.0 를 추가해 보셔요!")
-
-if st.session_state.chef_result:
-    st.divider(); st.subheader("🏁 AI 셰프들의 요리 제안"); st.write(st.session_state.chef_result)
-    input_pw = st.text_input("🔑 리포트 잠금해제 (style77)", type="password")
-    if input_pw == "style77":
-        if not st.session_state.unlocked:
-            play_celebration(); st.session_state.unlocked = True
-        pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
-        st.download_button(label="📄 PDF 리포트 다운로드", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
+                st.error(f"🚨 오류 발생: {e}")
