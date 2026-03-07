@@ -8,7 +8,7 @@ import streamlit.components.v1 as components
 # --- [1. 불꽃놀이 시스템: 무한루프 방지형] ---
 def trigger_fireworks():
     st.session_state.do_fireworks = True
-
+    
 def display_fireworks():
     # 실행 후 즉시 상태를 초기화해서 루프를 끊어버립니다요!
     if st.session_state.get('do_fireworks', False):
