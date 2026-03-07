@@ -5,3 +5,5 @@ opencv-python
 fpdf2
 markdown
 requests
+gspread
+google-auth
