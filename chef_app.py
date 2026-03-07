@@ -142,9 +142,50 @@ except:
     st.error("⚠️ API 키가 설정되지 않았습니다. Secrets를 확인해 주셔요!")
 
 # --- [5. 메인 UI] ---
-st.markdown('<h1 style="text-align: center;">👨‍🍳 AI 흑백요리사(영양사)</h1>', unsafe_allow_html=True)
-st.write("냉장고 속 남은 재료 사진을 올리면 AI 셰프들이 대결을 시작합니다!")
+st.markdown("""
+    <style>
+    /* 메인 배경 및 폰트 설정 */
+    .main { background-color: #0f172a; color: #f8fafc; }
+    .stButton>button {
+        width: 100%;
+        border-radius: 10px;
+        background: linear-gradient(45deg, #1e293b, #334155);
+        color: white;
+        border: 1px solid #475569;
+        font-weight: bold;
+        padding: 0.6rem;
+    }
+    .stButton>button:hover { background: #475569; border-color: #94a3b8; }
+    
+    /* 카드 스타일 컨테이너 */
+    .report-card {
+        background-color: #1e293b;
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid #334155;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    /* 네이버 카페 안내 박스 */
+    .cafe-notice {
+        background-color: #064e3b;
+        color: #ecfdf5;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 5px solid #10b981;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
+# --- [메인 헤더 섹션] ---
+st.markdown('<div style="text-align: center; padding: 2rem 0;">', unsafe_allow_html=True)
+st.markdown('<h1 style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">👨‍🍳 AI 흑백요리사(영양사)</h1>', unsafe_allow_html=True)
+st.markdown('<p style="color: #94a3b8; font-size: 1.1rem;">당신의 냉장고 사진 한 장으로 시작되는 미식 대결</p>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+    
 uploaded_img = st.file_uploader("📸 냉장고 사진 업로드", type=["jpg", "jpeg", "png"])
 
 if uploaded_img:
@@ -173,13 +214,21 @@ if uploaded_img:
 
 # --- [6. 결과 및 권한 제어 영역] ---
 if st.session_state.chef_result:
-    st.divider()
+    st.markdown('<div class="report-card">', unsafe_allow_html=True)
     st.subheader("🏁 AI 셰프들의 요리 제안")
     st.write(st.session_state.chef_result)
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    st.divider()
-    # 비밀번호 입력창 (일반 회원: style77 / 형님: master77)
-    access_key = st.text_input("🔑 서비스 코드 입력 (리포트/관리자)", type="password")
+    # 📢 네이버 카페 가입 유도 안내 (형님이 요청하신 문구!)
+    st.markdown(f"""
+        <div class="cafe-notice">
+            📢 <b>비밀번호 발급 안내</b><br>
+            <a href="https://cafe.naver.com/stylely" target="_blank" style="color: #6ee7b7; text-decoration: underline;">네이버 카페 '스타일리'</a>에 가입하시면 PDF 리포트 다운로드를 위한 비밀번호를 바로 확인하실 수 있습니다!
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # 🔑 비밀번호 입력창
+    access_key = st.text_input("🔑 서비스 코드 입력", type="password", placeholder="카페에서 확인한 코드를 입력해 주세요")
 
     col1, col2 = st.columns(2)
 
