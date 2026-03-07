@@ -62,7 +62,7 @@ if uploaded_img:
         with st.status("👨‍🍳 셰프들이 재료를 분석 중...", expanded=True) as status:
             try:
                 # ✅ 가장 확실한 전체 경로 모델명을 사용합니다!
-                model = genai.GenerativeModel('models/gemini-1.5-flash')
+                model = genai.GenerativeModel('models/gemini-2.5-flash')
                 
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
