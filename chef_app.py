@@ -92,7 +92,7 @@ if uploaded_img:
         with st.status("👨‍🍳 셰프들이 재료를 검토하고 있습니다요...", expanded=True) as status:
             try:
                 # 모델은 안정적인 1.5-flash를 사용합니다요!
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-2.0-flash')
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
                 
