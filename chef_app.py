@@ -182,7 +182,7 @@ st.markdown("""
 
 # --- [메인 헤더 섹션] ---
 st.markdown('<div style="text-align: center; padding: 2rem 0;">', unsafe_allow_html=True)
-st.markdown('<h1 style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">👨‍🍳 AI 흑백요리사(영양사)</h1>', unsafe_allow_html=True)
+st.markdown('<h1 style="font-size: 2.5rem; font-weight: 800; color: #475569;">👨‍🍳 AI 흑백요리사(영양사)</h1>', unsafe_allow_html=True)
 st.markdown('<p style="color: #94a3b8; font-size: 1.1rem;">당신의 냉장고 사진 한 장으로 시작되는 미식 대결</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
     
