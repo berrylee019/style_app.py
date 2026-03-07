@@ -223,7 +223,7 @@ if st.session_state.chef_result:
     st.markdown(f"""
         <div class="cafe-notice">
             📢 <b>비밀번호 발급 안내</b><br>
-            <a href="https://cafe.naver.com/stylely" target="_blank" style="color: #6ee7b7; text-decoration: underline;">네이버 카페 '스타일리'</a>에 가입하시면 PDF 리포트 다운로드를 위한 비밀번호를 바로 확인하실 수 있습니다!
+            <a href="https://cafe.naver.com/stylely" target="_blank" style="color: #6ee7b7; text-decoration: underline;">네이버 카페 '스타일리'</a>에 가입하시면 PDF 리포트 다운로드를 위한 비밀번호를 바로 확인(공지 참조)하실 수 있습니다!
         </div>
     """, unsafe_allow_html=True)
     
