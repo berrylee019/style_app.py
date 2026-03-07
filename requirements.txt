@@ -1,5 +1,6 @@
-google-generativeai
+google-generativeai>=0.7.0
 streamlit
 Pillow
 opencv-python
 fpdf2
+
