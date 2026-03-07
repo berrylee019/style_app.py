@@ -1,60 +1,92 @@
+import streamlit as st
+import google.generativeai as genai
+from fpdf import FPDF
+import os
+import re
+import requests
+from requests.auth import HTTPBasicAuth
+import streamlit.components.v1 as components
 import markdown # 상단에 추가
 
-# --- [본문 정제 함수: 마크다운 기호 제거 및 스타일링] ---
-def clean_post_content(text):
-    # 1. 지저분한 기호들 제거/치환
-    text = text.replace("---", "") # 구분선 제거
-    # 2. 마크다운을 HTML로 변환 (### -> <h2>, ** -> <strong> 등)
-    html = markdown.markdown(text)
-    # 3. 추가적인 스타일링 (예: 폰트 크기나 강조 색상 입히기)
-    styled_html = f"""
-    <div style="line-height: 1.8; font-family: 'Nanum Gothic', sans-serif;">
-        {html}
-    </div>
-    """
-    return styled_html
-
-# --- [워드프레스 미디어 업로드 함수: 썸네일용] ---
-def upload_wp_media(img_bytes, filename):
-    wp_url = f"{st.secrets['WP_URL']}/wp-json/wp/v2/media"
-    user = st.secrets["WP_USER"]
-    app_pw = st.secrets["WP_APP_PW"]
+# --- [1. 수익형 본문 정제 및 링크 삽입 함수] ---
+def inject_monetization(text):
+    # 지저분한 구분선 먼저 제거
+    clean_text = text.replace("---", "")
     
-    headers = {
-        "Content-Disposition": f"attachment; filename={filename}",
-        "Content-Type": "image/jpeg"
+    # 쿠팡 파트너스 키워드 및 링크 (형님의 실제 링크로 교체하셔요!)
+    coupang_keywords = {
+        "프라이팬": "https://link.coupang.com/a/dZQtZs",
+        "냄비": "https://link.coupang.com/a/dZQvKh",
+        "칼": "https://link.coupang.com/a/dZQzJx",
+        "에어프라이어": "https://link.coupang.com/a/dZQAN5",
+        "믹서기": "https://link.coupang.com/a/dZQBq0"
     }
     
-    res = requests.post(wp_url, auth=HTTPBasicAuth(user, app_pw), headers=headers, data=img_bytes)
-    if res.status_code == 201:
-        return res.json()['id'] # 업로드된 이미지의 ID 반환
-    return None
+    # 본문 내 키워드에 수익형 링크 삽입
+    for word, link in coupang_keywords.items():
+        if word in clean_text:
+            # 텍스트 내 단어를 링크가 포함된 형태로 치환
+            replacement = f'<strong>{word}</strong> <a href="{link}" style="color: #ff4200; font-weight: bold; text-decoration: none;">[🛒 최저가 확인]</a>'
+            clean_text = clean_text.replace(word, replacement)
 
-# --- [최종 워드프레스 포스팅 함수] ---
+    # 마크다운을 정갈한 HTML로 변환 (### -> <h2> 등)
+    html_body = markdown.markdown(clean_text)
+    
+    # 하단 서비스 홍보 문구 추가
+    footer_html = f"""
+    <div style="margin-top: 50px; padding: 20px; border-top: 2px solid #f0f0f0; background-color: #f9f9f9; border-radius: 10px; text-align: center;">
+        <p style="color: #555; font-size: 16px; margin-bottom: 10px;">👨‍🍳 <b>이 레시피는 AI 흑백요리사가 분석한 맞춤형 식단입니다.</b></p>
+        <p style="color: #888; font-size: 14px; margin-bottom: 20px;">더 많은 맞춤형 레시피와 영양 분석 리포트를 원하신다면 아래 서비스에 방문해 보세요!</p>
+        <a href="https://bw-chef.streamlit.app" style="display: inline-block; padding: 12px 25px; background-color: #111827; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">나도 냉장고 분석 받기 🚀</a>
+    </div>
+    """
+    
+    return f'<div class="recipe-post" style="line-height: 1.8; font-size: 16px;">{html_body}{footer_html}</div>'
+
+# --- [2. 워드프레스 미디어 업로드 함수: 썸네일용] ---
+def upload_wp_media(img_bytes, filename):
+    try:
+        wp_url = f"{st.secrets['WP_URL']}/wp-json/wp/v2/media"
+        user = st.secrets["WP_USER"]
+        app_pw = st.secrets["WP_APP_PW"]
+        
+        headers = {
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Type": "image/jpeg"
+        }
+        
+        res = requests.post(wp_url, auth=HTTPBasicAuth(user, app_pw), headers=headers, data=img_bytes)
+        if res.status_code == 201:
+            return res.json()['id'] # 업로드된 이미지 ID 반환
+        return None
+    except:
+        return None
+
+# --- [3. 최종 통합 포스팅 함수] ---
 def post_to_wordpress_pro(title, content, img_bytes):
     try:
-        # 1. 본문 정제
-        clean_html = clean_post_content(content)
+        # 본문 정제 및 수익화 작업
+        final_html = inject_monetization(content)
         
-        # 2. 썸네일 업로드
+        # 썸네일 업로드 시도
         media_id = upload_wp_media(img_bytes, "chef_thumbnail.jpg")
         
-        # 3. 글 발행
+        # 워드프레스 글 발행
         wp_url = f"{st.secrets['WP_URL']}/wp-json/wp/v2/posts"
         user = st.secrets["WP_USER"]
         app_pw = st.secrets["WP_APP_PW"]
         
         payload = {
             "title": title,
-            "content": clean_html,
+            "content": final_html,
             "status": "publish",
-            "featured_media": media_id if media_id else None # 썸네일 지정!
+            "featured_media": media_id if media_id else None
         }
         
         res = requests.post(wp_url, auth=HTTPBasicAuth(user, app_pw), json=payload)
         return res.status_code == 201
     except Exception as e:
-        st.error(f"포스팅 에러: {e}")
+        st.error(f"포스팅 오류: {e}")
         return False
 
 # --- [2. 축하 시스템] ---
