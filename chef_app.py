@@ -325,3 +325,6 @@ if st.session_state.chef_result:
                                 st.rerun() # 화면 새로고침
                             else:
                                 st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
+# --- [코드 맨 마지막 줄에 추가!] ---
+st.markdown("""
+    """, unsafe_allow_html=True)
