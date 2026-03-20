@@ -9,3 +9,4 @@ gspread
 google-auth
 openai
 replicate
+pydantic<2.0
