@@ -185,7 +185,7 @@ if uploaded_file is not None:
                 # --- 분석 실행 로직 (인종 및 체형 특징 강화 버전) ---
                 try:
                     # 1. 모델 설정
-                    model = genai.GenerativeModel('gemini-2.0-flash')
+                    model = genai.GenerativeModel('gemini-2.5-flash')
                     video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                     
                     # [강화된 프롬프트] 인종(Korean), 분위기(Elegant/Distinguished), 체형(Slender) 주입
