@@ -182,30 +182,31 @@ if uploaded_file is not None:
     if 'analysis_result' not in st.session_state:
         if st.button("✨ AI 스타일 분석 시작"):
             with st.status("🔍 AI가 성별과 스타일을 정밀 분석 중입니다...", expanded=True) as status:
+                # --- 분석 실행 로직 (인종 및 체형 특징 강화 버전) ---
                 try:
-                    # 1. 모델 설정 (Gemini 2.0 Flash)
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    # 1. 모델 설정
+                    model = genai.GenerativeModel('gemini-2.0-flash')
                     video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                     
-                    # [핵심] 성별 판단을 강제하는 프롬프트
-                    # --- 분석 실행 로직 내 프롬프트 교체 ---
-                    # --- [Gemini 분석용] 수정된 프롬프트 ---
+                    # [강화된 프롬프트] 인종(Korean), 분위기(Elegant/Distinguished), 체형(Slender) 주입
                     prompt = f"""
-                    이 영상의 주인공은 {gender}입니다. 반드시 {gender}의 관점에서만 스타일을 분석하세요.
-                    영상을 분석하여 다음 규칙을 100% 엄격히 준수하여 리포트하세요.
-                    
-                    1. 성별 및 분위기 확정: 주인공은 '{gender}'이며, 매우 '우아하고(Elegant)' '지적인(Sophisticated)' 분위기를 가지고 있습니다. 
-                    2. 체형 분석: 과도한 근육이나 노출보다는 '슬림하고(Slim)' '품격 있는(Distinguished)' 실루엣을 중심으로 분석하세요.
-                    3. 금기어: '남성적', '보이시' (여성일 경우) / '여성적', '페미닌' (남성일 경우) 표현을 절대 금지합니다.
-                    4. 답변 시작: 반드시 첫 줄에 '[성별: {gender}]'이라고 적고 시작하세요.
-                    
+                    이 영상의 주인공은 {gender}이며, 한국인(Korean/East Asian)입니다. 
+                    반드시 {gender}의 관점에서, '한국인 모델' 특유의 우아함과 세련미를 중심으로 분석하세요.
+                
+                    분석 규칙:
+                    1. 인종 및 성별 확정: 주인공은 '동양인(Korean)'이며 '{gender}'입니다. 서구적인 특징보다는 단아하고 세련된 동양적 미감을 강조하세요.
+                    2. 분위기 및 연령: 매우 '우아하고(Elegant)' '지적인(Sophisticated)' 분위기를 가진 성숙한 인물로 가정합니다. 
+                    3. 체형 분석: 비현실적인 근육이나 노출은 배제하고, '슬림하고(Slender)' '매끈한(Lean)' 실루엣을 중심으로 분석하세요.
+                    4. 금기어: '{'남성적', '보이시' if gender == '여성' else '여성적', '페미닌'}' 표현을 절대 금지합니다.
+                    5. 답변 시작: 반드시 첫 줄에 '[성별: {gender}]'이라고 적고 시작하세요.
+                
                     항목별 리포트 내용:
-                    # 1. 스타일 페르소나 (품격 있는 현대 {gender}의 세련미)
-                    # 2. 체형 강점 분석 (슬림한 실루엣과 신체 비율의 조화 강조)
+                    # 1. 스타일 페르소나 (기품 있는 현대 한국 {gender}의 세련미)
+                    # 2. 체형 강점 분석 (슬림한 라인과 동양적 비율의 조화)
                     # 3. 퍼스널 컬러 제안
-                    # 4. 오늘의 스타일링 팁 (노출을 최소화한 고급스러운 코디)
-                    
-                    모든 문장은 전문적인 비즈니스 패션 용어를 사용하고, 깔끔하게 마침표로 끝내주세요.
+                    # 4. 오늘의 스타일링 팁 (노출 없는 고급스러운 럭셔리 룩)
+                
+                    모든 문장은 전문적인 패션 비즈니스 용어를 사용하고, 마침표로 끝내주세요.
                     """
                     
                     response = model.generate_content([prompt, video_part])
@@ -217,7 +218,7 @@ if uploaded_file is not None:
                     elif "[성별: 남성]" in response.text:
                         st.session_state.detected_gender = "남성"
                     else:
-                        st.session_state.detected_gender = "여성" # 기본값
+                        st.session_state.detected_gender = gender # 선택한 기본값 사용
                         
                     status.update(label=f"✅ {st.session_state.detected_gender} 스타일 분석 완료!", state="complete", expanded=False)
                 except Exception as e:
