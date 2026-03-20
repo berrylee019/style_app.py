@@ -95,21 +95,31 @@ def create_pdf_file(text_content):
 def generate_style_visual(style_description, selected_gender):
     try:
         client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-        st.info(f"👗 {selected_gender} 고객님을 위한 프리미엄 화보를 제작 중입니다...")
+        st.info(f"👗 {selected_gender} 고객님을 위한 단아하고 품격 있는 화보를 제작 중입니다...")
         
-        # [수정] 검열에 걸릴 만한 'Body', 'Revealing', 'Muscular' 같은 단어를 삭제하고
-        # 대신 'Conservative', 'Classic', 'Tailored' 같은 안전한 단어만 사용합니다.
-        
+        # 1. 성별 및 분위기별 맞춤 베이스 묘사 (핵심 단어: Conservative, Slender, Graceful)
         if selected_gender == "여성":
-            base_desc = "A graceful female model with a classic and slim posture, wearing professional and conservative attire."
+            # 'Modest'와 'Conservative'는 노출을 원천 봉쇄하는 마법의 단어입니다.
+            base_desc = (
+                "An elegant and graceful female model with a slender and natural build. "
+                "She has a sophisticated and modest demeanor, wearing conservative and high-end fashion. "
+            )
         else:
-            base_desc = "A distinguished male model with a slender and refined silhouette, wearing high-end tailored business wear."
+            # 'Refined silhouette'와 'Lean'은 과한 근육 대신 슬림한 멋을 줍니다.
+            base_desc = (
+                "A distinguished and mature male model with a lean and refined silhouette. "
+                "He exudes a calm and professional aura, wearing classic tailored premium clothing. "
+            )
 
-        # 불필요한 금기어(NO...)를 삭제하고 긍정적인 스타일만 나열
+        # 2. 분석 결과에서 '노출'이나 '신체' 관련 단어가 있을 경우를 대비해 앞부분만 추출
+        refined_keywords = style_description[:80] 
+
+        # 3. 최종 프롬프트 조합 (검열을 피하기 위해 NO... 대신 긍정문으로만 구성)
         full_prompt = (
-            f"{base_desc} The outfit includes {style_description[:100]}. "
-            f"High-end fashion editorial photography, soft studio lighting, "
-            f"elegant atmosphere, 4k resolution, clean background."
+            f"{base_desc} The outfit is based on: {refined_keywords}. "
+            f"High-end editorial photography, soft and natural studio lighting, "
+            f"classic and calm background, focused on fabric texture and overall style, "
+            f"natural and comfortable pose, 4k resolution."
         )
         
         response = client.images.generate(
@@ -121,7 +131,8 @@ def generate_style_visual(style_description, selected_gender):
         )
         return response.data[0].url
     except Exception as e:
-        st.error(f"비주얼 생성 중 오류: {e}")
+        # 만약 또 정책 위반이 뜨면 사용자에게 부드럽게 안내
+        st.error("이미지 생성 정책으로 인해 일부 표현이 조정되었습니다. 다시 한번 시도해 주셔요!")
         return None
 
 # --- UI 레이아웃 시작 ---
