@@ -195,6 +195,36 @@ if uploaded_file is not None:
                 except Exception as e:
                     st.error(f"분석 오류: {e}")
 
+def generate_style_visual(style_description):
+    try:
+        client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+        st.info("👗 형님에게 어울리는 스타일을 AI가 시각화하고 있습니다...")
+        
+        # 분석 결과(style_description)를 바탕으로 화보급 프롬프트 생성
+        full_prompt = f"A high-quality fashion editorial photography of a model wearing {style_description}, trendy accessories, professional lighting, 4k resolution"
+        
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=full_prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+        
+        image_url = response.data[0].url
+        return image_url
+    except Exception as e:
+        st.error(f"비주얼 생성 중 오류: {e}")
+        return None
+
+# --- UI 부분 ---
+if st.button("✨ 내 스타일 시각화하기"):
+    if 'analysis_result' in st.session_state:
+        # Gemini가 낸 분석 결과에서 핵심 키워드만 뽑아 전달 (예시)
+        img_url = generate_style_visual(st.session_state['analysis_result'][:100])
+        if img_url:
+            st.image(img_url, caption="AI가 제안하는 오늘의 추천 코디입니다, 형님!")
+
     # --- 결과 출력 및 수익화 섹션 ---
     if 'analysis_result' in st.session_state:
         st.success("분석이 완료되었습니다!")
