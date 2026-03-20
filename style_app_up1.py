@@ -158,36 +158,58 @@ with col1:
 with col2:
     st.markdown('<div class="tip-card"><div class="tip-header">💡 3. 밝은 조명</div>조명이 밝아야 컬러를 정확히 잡아요.</div><br><div class="tip-card"><div class="tip-header">⏱️ 4. 5~15초 권장</div>너무 길면 업로드가 느려질 수 있어요.</div>', unsafe_allow_html=True)
 
-# --- 분석 및 시각화 로직 ---
+# --- 분석 실행 로직 (수정된 버전) ---
 if uploaded_file is not None:
     st.divider()
-    
-    # 1. 스타일 분석 버튼
     if 'analysis_result' not in st.session_state:
         if st.button("✨ AI 스타일 분석 시작"):
-            with st.status("🔍 AI가 스타일을 정밀 분석 중입니다...", expanded=True) as status:
+            with st.status("🔍 AI가 성별과 스타일을 정밀 분석 중입니다...", expanded=True) as status:
                 try:
-                    model = genai.GenerativeModel('gemini-2.0-flash') # 최신 모델명으로 수정
+                    # 1. 모델 설정 (Gemini 2.0 Flash)
+                    model = genai.GenerativeModel('gemini-2.0-flash')
                     video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
-                    prompt = "패션 컨설턴트로서 영상을 분석해 1.스타일 페르소나, 2.체형 강점, 3.컬러 제안, 4.팁 순으로 리포트해줘. 마크다운 기호 없이 깔끔하게."
+                    
+                    # [핵심] 성별 판단을 강제하는 프롬프트
+                    prompt = """
+                    당신은 세계 최고의 패션 전문가입니다. 영상을 보고 다음 규칙을 엄격히 지켜 분석하세요.
+                    
+                    1. 반드시 영상 속 인물의 성별을 먼저 파악하세요.
+                    2. 답변의 첫 번째 줄에 반드시 '[성별: 여성]' 또는 '[성별: 남성]'이라고 명시하세요.
+                    3. 이후 리포트는 그 성별에 맞는 전문적인 용어와 스타일 제안을 하세요.
+                       (여성인데 남성적 인상이라는 식의 오류를 범하지 마세요.)
+                    4. 항목: # 1. 스타일 페르소나, # 2. 체형 강점, # 3. 컬러 제안, # 4. 코디 팁.
+                    """
+                    
                     response = model.generate_content([prompt, video_part])
                     st.session_state.analysis_result = response.text
-                    status.update(label="✅ 분석 완료!", state="complete", expanded=False)
+                    
+                    # [자동 감지] 분석 결과에서 성별 추출
+                    if "[성별: 여성]" in response.text:
+                        st.session_state.detected_gender = "여성"
+                    elif "[성별: 남성]" in response.text:
+                        st.session_state.detected_gender = "남성"
+                    else:
+                        st.session_state.detected_gender = "여성" # 기본값
+                        
+                    status.update(label=f"✅ {st.session_state.detected_gender} 스타일 분석 완료!", state="complete", expanded=False)
                 except Exception as e:
                     st.error(f"분석 오류: {e}")
 
-    # 2. 결과 출력 및 시각화 버튼
+    # --- 시각화 버튼 부분 (수정) ---
     if 'analysis_result' in st.session_state:
         st.subheader("📊 AI 프리미엄 스타일 리포트")
         st.markdown(st.session_state.analysis_result)
         
         st.divider()
-        # [업그레이드 3] 버튼 로직 수정 (성별 전달)
-        if st.button("🎨 내 추천 스타일 화보로 보기"):
-            # 분석 결과에서 핵심 키워드 약 100자 추출하여 전달
-            img_url = generate_style_visual(st.session_state.analysis_result[:150], gender)
+        # [자동화] 이제 gender 변수 대신 AI가 찾은 detected_gender를 씁니다.
+        current_gender = st.session_state.get('detected_gender', '여성')
+        
+        if st.button(f"🎨 {current_gender} 추천 스타일 화보로 보기"):
+            # 분석 결과에서 성별 표시 부분을 제외하고 코디 정보만 추출
+            clean_description = st.session_state.analysis_result.replace("[성별: 여성]", "").replace("[성별: 남성]", "")
+            img_url = generate_style_visual(clean_description[:150], current_gender)
             if img_url:
-                st.image(img_url, caption=f"AI가 제안하는 {gender} 모델 코디 샘플입니다, 형님!")
+                st.image(img_url, caption=f"AI가 감지한 {current_gender} 맞춤 코디 화보입니다!")
                 st.balloons()
 
         # 3. 수익화(PDF 다운로드) 섹션
