@@ -49,7 +49,7 @@ if human_file and garment_file:
             try:
                 # Replicate의 최신 Virtual Try-On 모델 호출 (예: yisol/IDM-VTON)
                 output = replicate.run(
-                    "cuuupid/idm-vton",
+                    "cuuupid/idm-vton:0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985",
                     input={
                         "human_img": human_file,
                         "garm_img": garment_file,
