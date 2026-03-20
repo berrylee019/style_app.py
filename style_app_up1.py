@@ -166,7 +166,7 @@ if uploaded_file is not None:
             with st.status("🔍 AI가 성별과 스타일을 정밀 분석 중입니다...", expanded=True) as status:
                 try:
                     # 1. 모델 설정 (Gemini 2.0 Flash)
-                    model = genai.GenerativeModel('gemini-2.0-flash')
+                    model = genai.GenerativeModel('gemini-2.5-flash')
                     video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                     
                     # [핵심] 성별 판단을 강제하는 프롬프트
