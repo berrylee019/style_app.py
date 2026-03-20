@@ -95,15 +95,21 @@ def create_pdf_file(text_content):
 def generate_style_visual(style_description, selected_gender):
     try:
         client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-        st.info(f"👗 {selected_gender} 모델을 위한 맞춤형 화보를 AI가 제작 중입니다...")
+        st.info(f"👗 {selected_gender} 고객님을 위한 기품 있는 화보를 제작 중입니다...")
         
-        # 성별 영어 변환
-        gender_en = "female" if selected_gender == "여성" else "male"
-        
-        # 성별이 반영된 정교한 프롬프트
-        full_prompt = (f"A professional {gender_en} fashion model wearing {style_description}, "
-                       f"high-end fashion editorial photography, magazine style, "
-                       f"luxury lighting, 4k resolution, stylish background")
+        # 성별/연령 분위기 설정
+        if selected_gender == "여성":
+            model_desc = "An elegant, sophisticated middle-aged female model with a slim and natural build. Modest and classy demeanor."
+        else:
+            model_desc = "A distinguished, slim middle-aged male model with a natural and fit build. Mature and professional look."
+
+        # 최종 프롬프트 조합 (노출 및 과한 근육 방지 문구 포함)
+        full_prompt = (
+            f"{model_desc} wearing {style_description}. "
+            f"The outfit is modest, high-end fashion, and covers the body appropriately. "
+            f"High-end editorial photography, soft studio lighting, natural skin texture, "
+            f"NO muscular bodybuilder physique, NO provocative poses, NO revealing clothes."
+        )
         
         response = client.images.generate(
             model="dall-e-3",
@@ -171,21 +177,21 @@ if uploaded_file is not None:
                     
                     # [핵심] 성별 판단을 강제하는 프롬프트
                     # --- 분석 실행 로직 내 프롬프트 교체 ---
-                    # 버튼 클릭 시 선택된 성별(gender) 변수를 프롬프트에 직접 주입합니다.
+                    # --- [Gemini 분석용] 수정된 프롬프트 ---
                     prompt = f"""
                     이 영상의 주인공은 {gender}입니다. 반드시 {gender}의 관점에서만 스타일을 분석하세요.
                     영상을 분석하여 다음 규칙을 100% 엄격히 준수하여 리포트하세요.
                     
-                    1. 성별 확정: 영상 속 인물은 '{gender}'입니다. 절대로 상대 성별을 연상시키는 단어나 '남성적', '남자의 인상' 등의 표현을 사용하지 마세요.
-                    2. 금기어 설정: 분석 대상이 여성일 경우 '남성', '보이시', '매니시'를 금지하며, 남성일 경우 '여성적', '페미닌' 등의 반대되는 표현을 일절 금지합니다.
-                    3. {gender}적 가치 강조: {gender}에게 어울리는 실루엣, 세련된 {gender}미를 중심으로 전문적인 패션 분석을 진행하세요.
+                    1. 성별 및 분위기 확정: 주인공은 '{gender}'이며, 매우 '우아하고(Elegant)' '지적인(Sophisticated)' 분위기를 가지고 있습니다. 
+                    2. 체형 분석: 과도한 근육이나 노출보다는 '슬림하고(Slim)' '품격 있는(Distinguished)' 실루엣을 중심으로 분석하세요.
+                    3. 금기어: '남성적', '보이시' (여성일 경우) / '여성적', '페미닌' (남성일 경우) 표현을 절대 금지합니다.
                     4. 답변 시작: 반드시 첫 줄에 '[성별: {gender}]'이라고 적고 시작하세요.
                     
                     항목별 리포트 내용:
-                    # 1. 스타일 페르소나 (현대적인 {gender}의 세련미 등)
-                    # 2. 체형 강점 분석 ({gender}의 라인과 특징 강조)
+                    # 1. 스타일 페르소나 (품격 있는 현대 {gender}의 세련미)
+                    # 2. 체형 강점 분석 (슬림한 실루엣과 신체 비율의 조화 강조)
                     # 3. 퍼스널 컬러 제안
-                    # 4. 오늘의 스타일링 팁
+                    # 4. 오늘의 스타일링 팁 (노출을 최소화한 고급스러운 코디)
                     
                     모든 문장은 전문적인 비즈니스 패션 용어를 사용하고, 깔끔하게 마침표로 끝내주세요.
                     """
