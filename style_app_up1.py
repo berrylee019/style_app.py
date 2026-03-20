@@ -4,6 +4,7 @@ from fpdf import FPDF
 from datetime import datetime
 import os
 import re
+import openai
 
 # 1. API 키 설정
 try:
