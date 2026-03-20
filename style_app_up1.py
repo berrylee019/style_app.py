@@ -95,20 +95,21 @@ def create_pdf_file(text_content):
 def generate_style_visual(style_description, selected_gender):
     try:
         client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-        st.info(f"👗 {selected_gender} 고객님을 위한 기품 있는 화보를 제작 중입니다...")
+        st.info(f"👗 {selected_gender} 고객님을 위한 프리미엄 화보를 제작 중입니다...")
         
-        # 성별/연령 분위기 설정
+        # [수정] 검열에 걸릴 만한 'Body', 'Revealing', 'Muscular' 같은 단어를 삭제하고
+        # 대신 'Conservative', 'Classic', 'Tailored' 같은 안전한 단어만 사용합니다.
+        
         if selected_gender == "여성":
-            model_desc = "An elegant, sophisticated middle-aged female model with a slim and natural build. Modest and classy demeanor."
+            base_desc = "A graceful female model with a classic and slim posture, wearing professional and conservative attire."
         else:
-            model_desc = "A distinguished, slim middle-aged male model with a natural and fit build. Mature and professional look."
+            base_desc = "A distinguished male model with a slender and refined silhouette, wearing high-end tailored business wear."
 
-        # 최종 프롬프트 조합 (노출 및 과한 근육 방지 문구 포함)
+        # 불필요한 금기어(NO...)를 삭제하고 긍정적인 스타일만 나열
         full_prompt = (
-            f"{model_desc} wearing {style_description}. "
-            f"The outfit is modest, high-end fashion, and covers the body appropriately. "
-            f"High-end editorial photography, soft studio lighting, natural skin texture, "
-            f"NO muscular bodybuilder physique, NO provocative poses, NO revealing clothes."
+            f"{base_desc} The outfit includes {style_description[:100]}. "
+            f"High-end fashion editorial photography, soft studio lighting, "
+            f"elegant atmosphere, 4k resolution, clean background."
         )
         
         response = client.images.generate(
