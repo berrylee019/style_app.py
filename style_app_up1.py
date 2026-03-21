@@ -155,10 +155,9 @@ st.markdown('<p class="main-title">👗 AI 스타일 가이드</p>', unsafe_allo
 st.markdown('<p class="sub-title">실시간 비디오 분석으로 완성하는 당신만의 퍼스널 룩</p>', unsafe_allow_html=True)
 
 # --- 업로드 및 성별 선택 섹션 ---
-st.markdown("#### 📹 촬영 가이드 및 정보 입력")
+st.markdown("")
 c_v, c_u = st.columns([1.2, 1])
 
-import streamlit as st
 
 # ... 기존 코드 중 c_v, c_u 나누는 부분 ...
 
