@@ -83,7 +83,7 @@ if uploaded_file:
         with st.status("🔍 분석 중...") as status:
             try:
                 # 모델명 gemini-2.5-flash로 수정완료
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 prompt = f"""
                 당신은 최고의 AI 스타일리스트입니다. {gender} 사용자의 영상을 분석하여 다음 규격에 맞춰 상세 리포트를 작성하세요.
