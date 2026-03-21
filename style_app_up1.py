@@ -189,12 +189,33 @@ with c_v:
     st.caption("▲ 영상이 나오면 재생 버튼을 눌러주세요.")
 
 with c_u:
-    # 오른쪽 컬럼: 파일 업로드 및 성별 선택
-    uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "mov", "avi"])
-    gender = st.radio("시각화할 모델 성별 선택", ["여성", "남성"], horizontal=True)
+    st.markdown("#### ⚙️ 설정 및 업로드")
+    
+    # 1. 성별 선택 (가장 먼저 결정)
+    gender = st.radio("1️⃣ 시각화할 모델 성별 선택", ["여성", "남성"], horizontal=True)
+    
+    st.write("") # 약간의 간격
+    
+    # 2. 촬영 주의사항 (이 부분이 들어가야 영상과 높이가 맞습니다)
+    with st.expander("⚠️ 촬영 전 꼭 확인하세요!", expanded=True):
+        st.markdown("""
+        * **배경:** 깔끔한 단색 배경이 좋습니다.
+        * **복장:** 너무 벙벙한 옷보다는 체형이 보이는 옷!
+        * **거리:** 카메라에서 2~3m 떨어져서 전신이 나오게!
+        * **조명:** 역광을 피하고 밝은 곳에서 촬영하세요.
+        """)
+
+    st.write("") 
+
+    # 3. 파일 업로드
+    uploaded_file = st.file_uploader("2️⃣ 촬영한 영상을 업로드하세요", type=["mp4", "mov", "avi"])
     
     if uploaded_file:
-        st.success("✅ 영상 준비 완료!")
+        st.success("✅ 영상 준비 완료! 이제 분석을 시작하세요.")
+        # 여기에 '분석 시작' 버튼을 크게 배치하면 밸런스의 정점!
+        if st.button("🚀 StyleScan AI 분석 시작", use_container_width=True):
+            st.balloons()
+            st.info("AI가 영상을 분석 중입니다. 잠시만 기다려 주세요...")
 
 # --- 꿀팁 섹션 ---
 st.divider()
