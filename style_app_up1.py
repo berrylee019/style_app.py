@@ -133,22 +133,23 @@ if 'analysis_result' in st.session_state:
         st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
         cols = st.columns(len(keywords))
         
-
         for i, keyword in enumerate(keywords):
             with cols[i]:
-                # 1. 성별 + 키워드 조합 (예: 여성 실크 블라우스)
-                full_search_term = f"{gender} {keyword}".strip()
+                # 1. 검색 키워드 정제 (성별 포함 + 불필요한 공백 제거)
+                # 예: "여성 실크 블라우스"
+                search_query = f"{gender} {keyword}".strip()
                 
-                # 2. 쿠팡 직접 검색용 타겟 URL 생성
-                target_url = f"https://www.coupang.com/np/search?q={full_search_term}"
+                # 2. 쿠팡 검색 결과 페이지의 표준 주소 생성
+                target_url = f"https://www.coupang.com/np/search?q={search_query}"
                 
-                # 3. [중요] URL 인코딩 수행 
-                # 주소 안의 특수문자를 %2F, %3F 등으로 변환해야 쿠팡 서버가 목적지를 정확히 읽습니다.
-                encoded_target = urllib.parse.quote(target_url, safe='')
+                # 3. [핵심] 주소를 쿠팡 파트너스 시스템이 읽을 수 있게 인코딩
+                encoded_url = urllib.parse.quote(target_url)
                 
-                # 4. 최종 딥링크 조합 (CSWSDP 형식이 가장 안정적입니다)
-                shop_url = f"https://link.coupang.com/re/CSWSDP?lptag=AF5326630&subid=stylescan&pageKey={encoded_target}"
+                # 4. [수정] 가장 안정적인 딥링크(deeplink) 생성 구조로 변경
+                # 이 주소 체계는 검색 결과를 가장 정확하게 브라우징합니다.
+                shop_url = f"https://link.coupang.com/re/NONAMEP?lptag=AF5326630&subid=stylescan&pageKey={encoded_url}"
                 
+                # 5. 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
         
         st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.")
