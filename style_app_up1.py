@@ -93,7 +93,7 @@ if uploaded_file:
     if st.button("🚀 AI 스타일 분석 시작", use_container_width=True, type="primary"):
         with st.status("🔍 분석 중...", expanded=True) as status:
             try:
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-2.0-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 # [프롬프트 수정] 쇼핑몰 검색 정확도를 높이는 로직 추가
                 prompt = f"""
