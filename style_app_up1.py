@@ -36,26 +36,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 가이드 영상 섹션 시작 ---
-st.write("---")
-st.subheader("📺 StyleScan AI 사용 가이드")
-
-# 형님이 주신 HTML 코드를 Streamlit용 컴포넌트로 변환
-video_html = """
-<div style="display: flex; justify-content: center;">
-    <div class="separator" style="clear: both; text-align: center;">
-        <object class="BLOG_video_class" contentid="6023c4b258289095" 
-                width="100%" height="450" id="BLOG_video-6023c4b258289095" 
-                aria-label="동영상 업로드">
-        </object>
-    </div>
-</div>
-"""
-
-# HTML 실행 (너비와 높이를 적절히 조절했습니다)
-components.html(video_html, height=500)
-st.write("---")
-# --- 가이드 영상 섹션 끝 ---
 
 # --- [함수] PDF 생성 엔진 ---
 def create_pdf_file(text_content):
@@ -179,8 +159,23 @@ st.markdown("#### 📹 촬영 가이드 및 정보 입력")
 c_v, c_u = st.columns([1.2, 1])
 
 with c_v:
-    if os.path.exists("sample_guide.mp4"): st.video("sample_guide.mp4")
-    else: st.info("가이드 영상을 참조하세요!")
+    # --- 블로그 가이드 영상 삽입 시작 ---
+    # 블로그용 HTML 코드를 Streamlit 컴포넌트로 변환
+    guide_video_html = """
+    <div style="display: flex; justify-content: center; align-items: center; background-color: #f0f2f6; border-radius: 10px; padding: 10px;">
+        <div class="separator" style="clear: both; text-align: center; width: 100%;">
+            <object class="BLOG_video_class" contentid="6023c4b258289095" 
+                    width="100%" height="350" id="BLOG_video-6023c4b258289095" 
+                    aria-label="동영상 업로드">
+            </object>
+        </div>
+    </div>
+    """
+    
+    # HTML 실행 (컬럼 너비에 맞춰 높이를 380 정도로 잡았습니다)
+    components.html(guide_video_html, height=380)
+    st.caption("▲ 위 가이드 영상을 먼저 시청하신 후 촬영해 주세요.")
+    # --- 블로그 가이드 영상 삽입 끝 ---
 
 with c_u:
     uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "mov", "avi"])
