@@ -85,12 +85,15 @@ if uploaded_file:
                 # 모델명 gemini-1.5-flash로 수정완료
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
+                # [수정] 프롬프트를 영어로 먼저 주고, 한글로 답하게 하면 속도가 훨씬 빠릅니다.
                 prompt = f"""
-                당신은 최고의 AI 스타일리스트입니다. {gender} 사용자의 영상을 분석하여 다음 규격에 맞춰 상세 리포트를 작성하세요.
-                1. 스타일 페르소나 / 2. 체형 강점 / 3. 퍼스널 컬러 / 4. 스타일링 팁
-                마지막 줄 형식 엄수: # 쇼핑 키워드: [키워드1, 키워드2, 키워드3]
+                Analyze the {gender}'s fashion style in this video briefly. 
+                Provide: 1. Persona, 2. Body strength, 3. Personal color, 4. Styling tips.
+                Lastly, add '# 쇼핑 키워드: [Item1, Item2, Item3]' in Korean.
+                Please respond in Korean.
                 """
-                response = model.generate_content([prompt, video_part])
+                # 요청 시점에 인코딩 부하를 줄이기 위해 단순하게 호출
+                response = model.generate_content([prompt, video_part], request_options={"timeout": 600})
                 st.session_state.analysis_result = response.text
                 status.update(label="✅ 분석 완료!", state="complete")
             except Exception as e:
