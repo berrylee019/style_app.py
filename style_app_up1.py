@@ -127,10 +127,18 @@ if 'analysis_result' in st.session_state:
         
         for i, keyword in enumerate(keywords):
             with cols[i]:
-                # 1. target_url 정의
-                target_url = f"https://www.coupang.com/np/search?q={keyword.replace(' ', '+')}"
-                # 2. 형님의 AF 아이디 포함된 딥링크 생성 (AF5326630)
-                shop_url = f"https://link.coupang.com/re/AFFSDP?lptag=AF5326630&subid=stylescan&pageKey={target_url}"
+                # 1. 검색어 클리닝 (공백 제거 및 인코딩 준비)
+                clean_keyword = keyword.strip().replace(' ', '+')
+                
+                # 2. [해결 포인트] 타겟 URL을 단순화합니다.
+                # 복잡한 파라미터 없이 검색 결과 주소만 깔끔하게 만듭니다.
+                target_url = f"https://www.coupang.com/np/search?q={clean_keyword}"
+                
+                # 3. [중요] 쿠팡 파트너스 클릭 추적용 '리다이렉트' 주소 최적화
+                # 기존의 AFFSDP 방식이 Akamai 보안에 걸릴 경우, 아래의 범용 딥링크 형식을 사용합니다.
+                # 형님의 AF 아이디(AF5326630)는 유지하면서 구조를 변경했습니다.
+                shop_url = f"https://link.coupang.com/re/CSWSDP?lptag=AF5326630&subid=stylescan&pageKey={target_url}"
+                
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
         
         st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.")
