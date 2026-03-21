@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 import re
 import openai
-#import streamlit.components.v1 as components
+import streamlit.components.v1 as components
 
 # 1. API 키 및 페이지 설정
 try:
@@ -164,16 +164,29 @@ c_v, c_u = st.columns([1.2, 1])
 with c_v:
     st.markdown('<h4 style="color: #1a73e8; margin-top: 0;">📹 촬영 가이드 및 정보 입력</h4>', unsafe_allow_html=True)
     
-    # 형님이 주신 유튜브 쇼츠 주소입니다.
-    # 쇼츠 주소도 st.video에서 바로 인식합니다!
-    video_url = "https://youtube.com/shorts/watch?v=1vE5QSvW_Vg"
+    # [최종병기] 유튜브 쇼츠를 임베드용 주소로 바꿨습니다.
+    # shorts/1vE5QSvW_Vg  ->  embed/1vE5QSvW_Vg
+    embed_url = "https://www.youtube.com/embed/1vE5QSvW_Vg?rel=0&modestbranding=1"
     
-    try:
-        # 유튜브 영상을 메인 화면 왼쪽 컬럼에 꽉 차게 배치
-        st.video(video_url)
-        st.caption("▲ 위 가이드 영상을 시청하신 후 촬영해 주세요.")
-    except Exception as e:
-        st.info("📺 가이드 영상을 참조하세요! (유튜브 연결 확인 중)")
+    # HTML로 직접 플레이어를 그려버립니다.
+    # 세로형 영상(Shorts)이므로 비율을 고려해 높이를 500으로 잡았습니다.
+    video_html = f"""
+    <div style="display: flex; justify-content: center; border-radius: 12px; overflow: hidden; background-color: #000;">
+        <iframe 
+            width="100%" 
+            height="500" 
+            src="{embed_url}" 
+            title="YouTube video player" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen>
+        </iframe>
+    </div>
+    """
+    
+    # 실행!
+    components.html(video_html, height=520)
+    st.caption("▲ 영상이 나오면 재생 버튼을 눌러주세요.")
 
 with c_u:
     # 오른쪽 컬럼: 파일 업로드 및 성별 선택
