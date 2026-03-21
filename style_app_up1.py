@@ -6,6 +6,7 @@ import os
 import re
 import openai
 import streamlit.components.v1 as components
+import urllib.parse
 
 # 1. API 키 및 페이지 설정
 try:
@@ -132,14 +133,21 @@ if 'analysis_result' in st.session_state:
         st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
         cols = st.columns(len(keywords))
         
+
         for i, keyword in enumerate(keywords):
             with cols[i]:
-                # 검색어 앞에 성별을 강제로 붙여서 검색 정확도를 높입니다 (예: 여성 실크 블라우스)
-                enhanced_keyword = f"{gender} {keyword}".strip()
-                clean_keyword = enhanced_keyword.replace(' ', '+')
+                # 1. 성별 + 키워드 조합 (예: 여성 실크 블라우스)
+                full_search_term = f"{gender} {keyword}".strip()
                 
-                target_url = f"https://www.coupang.com/np/search?q={clean_keyword}"
-                shop_url = f"https://link.coupang.com/re/CSWSDP?lptag=AF5326630&subid=stylescan&pageKey={target_url}"
+                # 2. 쿠팡 직접 검색용 타겟 URL 생성
+                target_url = f"https://www.coupang.com/np/search?q={full_search_term}"
+                
+                # 3. [중요] URL 인코딩 수행 
+                # 주소 안의 특수문자를 %2F, %3F 등으로 변환해야 쿠팡 서버가 목적지를 정확히 읽습니다.
+                encoded_target = urllib.parse.quote(target_url, safe='')
+                
+                # 4. 최종 딥링크 조합 (CSWSDP 형식이 가장 안정적입니다)
+                shop_url = f"https://link.coupang.com/re/CSWSDP?lptag=AF5326630&subid=stylescan&pageKey={encoded_target}"
                 
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
         
