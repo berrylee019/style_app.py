@@ -178,8 +178,8 @@ if 'analysis_result' in st.session_state:
         cols = st.columns(len(keywords))
         for i, keyword in enumerate(keywords):
             with cols[i]:
-                # 쿠팡 검색 동적 URL 생성
-                shop_url = f"https://www.coupang.com/np/search?q={keyword.replace(' ', '+')}"
+                # 형님의 AF 아이디를 넣은 수익 링크 조합 공식
+                shop_url = f"https://link.coupang.com/re/AFFSDP?lptag=AF5326630&subid=stylescan&pageKey={target_url}"
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
         
         st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.")
