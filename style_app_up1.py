@@ -159,24 +159,27 @@ st.markdown("#### 📹 촬영 가이드 및 정보 입력")
 c_v, c_u = st.columns([1.2, 1])
 
 with c_v:
-    st.info("📺 가이드 영상을 불러오는 중입니다...")
+    # 400 에러를 방지하기 위해 가장 표준적인 블로거 영상 주소 형식을 사용합니다.
+    video_id = "6023c4b258289095"
+    embed_url = f"https://www.blogger.com/video.g?contentId={video_id}"
     
-    # 더 안정적인 iframe 방식의 HTML
-    guide_video_html = """
-    <div style="display: flex; justify-content: center; background-color: #000; border-radius: 10px; overflow: hidden;">
+    # HTML 컴포넌트로 감싸기
+    video_html = f"""
+    <div style="width: 100%; display: flex; justify-content: center; background-color: #000; border-radius: 8px;">
         <iframe 
-            src="https://www.blogger.com/video.g?contentId=6023c4b258289095" 
+            src="{embed_url}" 
             width="100%" 
             height="350" 
             frameborder="0" 
-            allowfullscreen>
+            allowfullscreen="true"
+            loading="lazy">
         </iframe>
     </div>
     """
     
-    # 높이를 넉넉하게 400으로 설정
-    components.html(guide_video_html, height=400)
-    st.caption("▲ 영상이 보이지 않으면 페이지를 새로고침(F5)해 주세요.")
+    # 렌더링
+    components.html(video_html, height=380)
+    st.caption("▲ 화면이 하얗게 나오거나 에러가 나면 '로그인 상태'를 확인해 주세요.")
 
 with c_u:
     uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "mov", "avi"])
