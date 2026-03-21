@@ -155,35 +155,34 @@ if uploaded_file:
             except Exception as e:
                 st.error(f"오류: {e}")
 
-# --- 섹션 3: 결과 출력 및 수익화 (동적 링크 연결) ---
+# [수정된 로직] AI 답변에서 추출한 키워드로 수익 링크 버튼 생성
 if 'analysis_result' in st.session_state:
+    # 1. AI 답변에서 쇼핑 키워드 추출
+    keywords = extract_shop_keywords(st.session_state.analysis_result)
+    
     st.divider()
-    st.subheader("📊 AI 프리미엄 스타일 리포트")
-    st.markdown(st.session_state.analysis_result)
+    st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
+    
+    # 2. 키워드 개수만큼 컬럼 생성
+    cols = st.columns(len(keywords))
+    
+    for i, keyword in enumerate(keywords):
+        with cols[i]:
+            # --- [에러 해결 포인트] target_url을 먼저 정의합니다 ---
+            # 검색어의 공백을 +로 치환하여 쿠팡 검색 URL 생성
+            clean_keyword = keyword.replace(' ', '+')
+            target_url = f"https://www.coupang.com/np/search?q={clean_keyword}"
+            
+            # --- [수익화 포인트] 형님의 AF 아이디를 포함한 딥링크 조합 ---
+            # 방법 2: 딥링크 형식을 사용하여 형님의 아이디(AF5326630)와 연결
+            shop_url = f"https://link.coupang.com/re/AFFSDP?lptag=AF5326630&subid=stylescan&pageKey={target_url}"
+            
+            # 3. 버튼 생성
+            st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
 
-    # 화보 생성 버튼
-    if st.button(f"🎨 {gender} 추천 스타일 화보로 보기", use_container_width=True):
-        with st.spinner("AI 화보 생성 중..."):
-            img_url = generate_style_visual(st.session_state.analysis_result, gender)
-            st.session_state.pictorial_url = img_url
-
-    # 화보 및 동적 쇼핑 버튼 출력 영역
-    if 'pictorial_url' in st.session_state and st.session_state.pictorial_url:
-        st.image(st.session_state.pictorial_url, caption="AI 맞춤형 스타일 화보")
-        
-        # [동적 링크 로직 적용]
-        keywords = extract_shop_keywords(st.session_state.analysis_result)
-        
-        st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
-        cols = st.columns(len(keywords))
-        for i, keyword in enumerate(keywords):
-            with cols[i]:
-                # 형님의 AF 아이디를 넣은 수익 링크 조합 공식
-                shop_url = f"https://link.coupang.com/re/AFFSDP?lptag=AF5326630&subid=stylescan&pageKey={target_url}"
-                st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
-        
-        st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.")
-
+    # 파트너스 필수 문구 (법적 보호)
+    st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다. (ID: AF5326630)")
+    
         # [Step 2] 고화질 소장 결제
         st.write("")
         with st.container(border=True):
