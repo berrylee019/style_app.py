@@ -133,24 +133,29 @@ if 'analysis_result' in st.session_state:
         st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
         cols = st.columns(len(keywords))
 
+
         for i, keyword in enumerate(keywords):
             with cols[i]:
-                # 1. 검색어 최적화: '중년 남성' + 'AI 추출 키워드' 조합
-                # 중년 남성 타겟이므로 키워드 앞에 타겟을 명시하여 검색 질을 높입니다.
-                search_query = f"중년 남성 {keyword}".strip()
+                # 1. 검색어 정제: 성별 + AI 키워드 (예: "남성 카키 기능성 반팔티")
+                # 공백이 포함된 전체 문장을 하나의 검색어로 만듭니다.
+                raw_search_term = f"{gender} {keyword}".strip()
                 
-                # 2. [핵심] 쿠팡 파트너스 검색 결과 전용 딥링크 구조
-                # 이 구조는 쿠팡에서 '검색 결과'를 수익 링크로 만들 때 사용하는 표준 규격입니다.
-                # pageKey 부분에 검색 결과 주소를 인코딩해서 넣습니다.
-                base_search_url = f"https://www.coupang.com/np/search?q={search_query}"
-                encoded_search_url = urllib.parse.quote(base_search_url)
+                # 2. [핵심] 쿠팡 검색용 URL 생성
+                # 검색어(q=) 부분을 먼저 인코딩해야 주소가 깨지지 않습니다.
+                encoded_query = urllib.parse.quote(raw_search_term)
+                target_url = f"https://www.coupang.com/np/search?q={encoded_query}"
                 
-                # 3. 형님의 AF5326630 아이디가 박힌 최종 수익 링크
-                # 구조: link.coupang.com/re/PCSWSDP (파트너스 검색 전용 리다이렉터)
-                shop_url = f"https://link.coupang.com/re/PCSWSDP?lptag=AF5326630&subid=stylescan&pageKey={encoded_search_url}"
+                # 3. [최종 해결] 전체 target_url을 다시 한번 인코딩하여 pageKey에 삽입
+                # 이렇게 '이중 처리'를 해줘야 link.coupang.com 리다이렉터를 통과해도 
+                # "반팔티"라는 뒷부분 단어가 잘리지 않고 끝까지 전달됩니다.
+                final_encoded_url = urllib.parse.quote(target_url, safe='')
                 
-                # 4. 버튼 생성
+                # 4. 형님의 수익 아이디(AF5326630)와 결합된 최종 딥링크
+                shop_url = f"https://link.coupang.com/re/PCSWSDP?lptag=AF5326630&subid=stylescan&pageKey={final_encoded_url}"
+                
+                # 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
+
         
         st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.")
 
