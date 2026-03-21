@@ -82,7 +82,7 @@ if uploaded_file:
     if st.button("🚀 AI 스타일 분석 시작", use_container_width=True, type="primary"):
         with st.status("🔍 분석 중...") as status:
             try:
-                # 모델명 gemini-2.5-flash로 수정완료
+                # 모델명 gemini-1.5-flash로 수정완료
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 prompt = f"""
