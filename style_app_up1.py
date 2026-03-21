@@ -132,24 +132,24 @@ if 'analysis_result' in st.session_state:
         keywords = extract_shop_keywords(st.session_state.analysis_result)
         st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
         cols = st.columns(len(keywords))
-        
+
         for i, keyword in enumerate(keywords):
             with cols[i]:
-                # 1. 검색 키워드 정제 (성별 포함 + 불필요한 공백 제거)
-                # 예: "여성 실크 블라우스"
-                search_query = f"{gender} {keyword}".strip()
+                # 1. 검색어 최적화: '중년 남성' + 'AI 추출 키워드' 조합
+                # 중년 남성 타겟이므로 키워드 앞에 타겟을 명시하여 검색 질을 높입니다.
+                search_query = f"중년 남성 {keyword}".strip()
                 
-                # 2. 쿠팡 검색 결과 페이지의 표준 주소 생성
-                target_url = f"https://www.coupang.com/np/search?q={search_query}"
+                # 2. [핵심] 쿠팡 파트너스 검색 결과 전용 딥링크 구조
+                # 이 구조는 쿠팡에서 '검색 결과'를 수익 링크로 만들 때 사용하는 표준 규격입니다.
+                # pageKey 부분에 검색 결과 주소를 인코딩해서 넣습니다.
+                base_search_url = f"https://www.coupang.com/np/search?q={search_query}"
+                encoded_search_url = urllib.parse.quote(base_search_url)
                 
-                # 3. [핵심] 주소를 쿠팡 파트너스 시스템이 읽을 수 있게 인코딩
-                encoded_url = urllib.parse.quote(target_url)
+                # 3. 형님의 AF5326630 아이디가 박힌 최종 수익 링크
+                # 구조: link.coupang.com/re/PCSWSDP (파트너스 검색 전용 리다이렉터)
+                shop_url = f"https://link.coupang.com/re/PCSWSDP?lptag=AF5326630&subid=stylescan&pageKey={encoded_search_url}"
                 
-                # 4. [수정] 가장 안정적인 딥링크(deeplink) 생성 구조로 변경
-                # 이 주소 체계는 검색 결과를 가장 정확하게 브라우징합니다.
-                shop_url = f"https://link.coupang.com/re/NONAMEP?lptag=AF5326630&subid=stylescan&pageKey={encoded_url}"
-                
-                # 5. 버튼 생성
+                # 4. 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
         
         st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.")
