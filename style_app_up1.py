@@ -58,7 +58,7 @@ with col_img:
 
 with col_txt:
     st.markdown("""<div style="background: #E1F5FE; border-radius: 15px; padding: 15px; border: 1px solid #B3E5FC;">
-        <strong style="color: #0288D1;">Styley:</strong> "반갑습니다 형님! 오늘 베스트 룩을 뽑아드릴게유! ✨"</div>""", unsafe_allow_html=True)
+        <strong style="color: #0288D1;">Styley:</strong> "반갑습니다! 당신의 베스트 룩을 뽑아드리겠습니다! ✨"</div>""", unsafe_allow_html=True)
 
 st.markdown('<p class="main-title">👗 AI 스타일 가이드</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">실시간 비디오 분석으로 완성하는 당신만의 퍼스널 룩</p>', unsafe_allow_html=True)
