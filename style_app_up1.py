@@ -28,7 +28,7 @@ uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "m
 if uploaded_file:
     if st.button("🚀 AI 분석 시작", use_container_width=True, type="primary"):
         with st.spinner("AI 분석 중..."):
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
             
             # 분석 리포트와 키워드를 동시에 요청
