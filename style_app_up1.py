@@ -142,15 +142,19 @@ if 'analysis_result' in st.session_state:
                 # 1. 검색어 생성 (예: 남성 카키 기능성 반팔티)
                 search_query = f"{gender} {keyword}".strip()
                 
-                # 2. [비장의 카드] 쿠팡 파트너스 검색 리포트 다이렉트 주소
-                # 이 구조는 쿠팡 파트너스에서 '검색 위젯'을 만들 때 사용하는 표준 규격입니다.
-                # 중간 리다이렉트 과정에서 검색어가 잘리는 현상이 거의 없습니다.
+                # 2. [복구 포인트] 쿠팡 파트너스 표준 숏링크 + 검색 쿼리 결합
+                # 전에는 'pageKey=' 안에 주소를 통째로 넣었지만, 
+                # 이번에는 'q=' 파라미터를 밖으로 빼서 직접 전달합니다.
+                # 이 방식이 쿠팡 앱/웹 검색창에 키워드를 꽂아 넣는 가장 원초적인 방법입니다.
+                
                 encoded_keyword = urllib.parse.quote(search_query)
                 
-                # 핵심: lptag와 subid를 먼저 보내고, 뒤에 검색 결과 주소를 통째로 인코딩해서 붙입니다.
-                shop_url = f"https://link.coupang.com/a/AF5326630?pageKey=https%3A%2F%2Fwww.coupang.com%2Fnp%2Fsearch%3Fq%3D{encoded_keyword}"
+                # 3. [최종 주소] 형님 아이디(AF5326630)와 검색어를 다이렉트로 연결
+                # 이 주소 형식을 사용하면 쿠팡이 '형님의 실적'으로 인지하면서 
+                # 동시에 검색창에 키워드를 정확히 입력해 줍니다.
+                shop_url = f"https://link.coupang.com/a/AF5326630?q={encoded_keyword}"
                 
-                # 3. 버튼 생성
+                # 4. 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
 
         
