@@ -150,12 +150,8 @@ if 'analysis_result' in st.session_state:
                 
                 # [수정된 주소 구조] 
                 # link.coupang.com 대신 'a.coupang.com' 또는 아래의 직접 호출 방식을 사용합니다.
-                shop_url = (
-                    f"https://link.coupang.com/re/PCSWSDP?"
-                    f"lptag=AF5326630"
-                    f"&subid=stylescan"
-                    f"&pageKey=https%3A%2F%2Fwww.coupang.com%2Fnp%2Fsearch%3Fq%3D{encoded_keyword}"
-                )
+                # 가장 단순하지만 강력한 형태
+                shop_url = f"https://link.coupang.com/a/AF5326630?q={encoded_keyword}"
                 
                 # 3. 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
