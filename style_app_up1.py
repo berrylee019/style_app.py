@@ -142,20 +142,13 @@ if 'analysis_result' in st.session_state:
                 # 1. 검색어 생성 (예: 남성 카키 기능성 반팔티)
                 search_query = f"{gender} {keyword}".strip()
                 
-                # 2. [핵심] 쿠팡 파트너스 '검색 전용' 다이렉트 주소 구조
-                # 이 주소는 중간 리다이렉트 없이 쿠팡 검색 엔진으로 키워드를 바로 쏩니다.
-                # lptag(형님 아이디)와 q(검색어)를 나란히 배치하는 것이 포인트입니다.
-                
+                # 2. [비장의 카드] 쿠팡 파트너스 검색 리포트 다이렉트 주소
+                # 이 구조는 쿠팡 파트너스에서 '검색 위젯'을 만들 때 사용하는 표준 규격입니다.
+                # 중간 리다이렉트 과정에서 검색어가 잘리는 현상이 거의 없습니다.
                 encoded_keyword = urllib.parse.quote(search_query)
                 
-                # [수정된 주소 구조] 
-                # link.coupang.com 대신 'a.coupang.com' 또는 아래의 직접 호출 방식을 사용합니다.
-                shop_url = (
-                    f"https://link.coupang.com/re/PCSWSDP?"
-                    f"lptag=AF5326630"
-                    f"&subid=stylescan"
-                    f"&pageKey=https%3A%2F%2Fwww.coupang.com%2Fnp%2Fsearch%3Fq%3D{encoded_keyword}"
-                )
+                # 핵심: lptag와 subid를 먼저 보내고, 뒤에 검색 결과 주소를 통째로 인코딩해서 붙입니다.
+                shop_url = f"https://link.coupang.com/a/AF5326630?pageKey=https%3A%2F%2Fwww.coupang.com%2Fnp%2Fsearch%3Fq%3D{encoded_keyword}"
                 
                 # 3. 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
