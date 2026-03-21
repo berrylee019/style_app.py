@@ -93,7 +93,7 @@ if uploaded_file:
     if st.button("🚀 AI 스타일 분석 시작", use_container_width=True, type="primary"):
         with st.status("🔍 AI가 스타일과 쇼핑 키워드를 분석 중...", expanded=True) as status:
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 
                 # [수정됨] 쇼핑 키워드 추출을 위한 강화된 프롬프트
