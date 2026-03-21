@@ -47,15 +47,51 @@ def create_pdf_file(text_content):
     pdf.multi_cell(0, 10, txt=text_content.encode('latin-1', 'ignore').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
 
+# --- [함수] 수정된 비주얼 생성 엔진 (성별 가이드라인 강화) ---
 def generate_style_visual(style_description, selected_gender):
     try:
         client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-        base_desc = "Elegant Korean model, sophisticated modest fashion, high-end editorial photography. "
-        full_prompt = f"{base_desc} Style: {style_description[:100]}. {selected_gender} model, natural lighting, 4k."
-        response = client.images.generate(model="dall-e-3", prompt=full_prompt, size="1024x1024", n=1)
+        st.info(f"👗 {selected_gender} 고객님을 위한 단아하고 품격 있는 화보를 제작 중입니다...")
+        
+        # 1. 성별 및 분위기별 맞춤 베이스 묘사 (핵심 단어: Conservative, Graceful, Distinguished)
+        # 이 부분이 약해서 성별이 바뀌어 나왔던 것입니다.
+        if selected_gender == "여성":
+            # 여성: 우아하고 단아하며, 노출이 없는 고급스러운 스타일
+            base_desc = (
+                "An elegant and graceful female model with a slender and natural build. "
+                "She has a sophisticated and modest demeanor, wearing conservative and high-end fashion. "
+                "Natural pose, graceful aura."
+            )
+        else:
+            # 남성: 기품 있고 성숙하며, 클래식한 슬림 핏 스타일
+            # 'Mature', 'Distinguished', 'Tailored' 단어로 남성성을 확고히 합니다.
+            base_desc = (
+                "A distinguished and mature male model with a lean and refined silhouette. "
+                "He exudes a calm and professional aura, wearing classic tailored premium clothing. "
+                "Confident and natural pose, masculine yet elegant."
+            )
+
+        # 2. 최종 프롬프트 조합 (DALL-E 3 전용)
+        # 분석 결과(키워드)와 성별 기반 묘사를 결합합니다.
+        full_prompt = (
+            f"{base_desc} The outfit style is based on: {style_description[:150]}. " # 분석 결과 반영
+            f"High-end editorial photography, soft and natural studio lighting, "
+            f"classic and calm background, focused on fabric texture and overall style, "
+            f"natural Korean model, 4k resolution."
+        )
+        
+        # 이미지 생성 요청
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=full_prompt,
+            size="1024x1024",
+            quality="standard", # 화질은 기본으로 설정 (비용 절감)
+            n=1,
+        )
         return response.data[0].url
     except Exception as e:
-        st.error(f"이미지 생성 중 오류 발생: {e}")
+        # 오류 발생 시 부드럽게 안내
+        st.error("이미지 생성 정책으로 인해 일부 표현이 조정되었습니다. 다시 한번 시도해 주셔요!")
         return None
 
 # --- UI 상단 ---
