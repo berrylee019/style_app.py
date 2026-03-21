@@ -97,15 +97,17 @@ if uploaded_file:
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 # [프롬프트 수정] 쇼핑몰 검색 정확도를 높이는 로직 추가
                 prompt = f"""
-                이 영상의 주인공은 {gender}이며, 한국인(Korean)입니다. 
-                분석 결과에 따라 실제 쇼핑몰(쿠팡)에서 검색했을 때 '의류 상품'이 즉시 노출될 수 있는 구체적인 키워드를 추출하세요.
-                
-                [쇼핑 키워드 추출 규칙]
-                1. 추상적인 단어(예: 우아한, 세련된, 스타일)는 절대 사용 금지.
-                2. 반드시 '소재/색상 + 아이템명' 조합으로 생성 (예: 실크 블라우스, 린넨 셔츠, 세미 와이드 슬랙스).
-                3. 해당 {gender}의 체형과 스타일에 가장 잘 어울리는 구체적인 상의, 하의, 아우터 위주로 선정.
-                
-                마지막 줄 형식 엄수:
+                당신은 최고의 AI 패션 스타일리스트입니다. {gender} 사용자의 영상을 분석하여 다음 규격에 맞춰 리포트를 작성하세요.
+                반드시 모든 항목을 상세히 작성해야 합니다.
+
+                1. 스타일 페르소나: 사용자의 현재 스타일을 정의하세요.
+                2. 체형 강점 분석: 영상에서 보이는 체형의 장점을 서술하세요.
+                3. 퍼스널 컬러 제안: 가장 잘 어울리는 색상군을 추천하세요.
+                4. 스타일링 팁: 더 멋져 보일 수 있는 구체적인 코디법을 제시하세요.
+
+                [데이터 추출 규칙]
+                리포트 맨 마지막 줄에 반드시 아래 형식을 한 줄로 추가하세요. 
+                (검색어는 '소재+아이템' 형태의 구체적 명사여야 함)
                 # 쇼핑 키워드: [키워드1, 키워드2, 키워드3]
                 """
                 response = model.generate_content([prompt, video_part])
@@ -114,7 +116,7 @@ if uploaded_file:
             except Exception as e:
                 st.error(f"오류: {e}")
 
-# --- 섹션 3: 결과 및 수익화 (에러 해결 구간) ---
+# --- 섹션 3: 결과 및 수익화 (링크 유실 방지 로직) ---
 if 'analysis_result' in st.session_state:
     st.divider()
     st.subheader("📊 AI 프리미엄 스타일 리포트")
@@ -128,32 +130,29 @@ if 'analysis_result' in st.session_state:
     if 'pictorial_url' in st.session_state and st.session_state.pictorial_url:
         st.image(st.session_state.pictorial_url, caption="AI 맞춤형 화보")
         
-        # [동적 쇼핑 링크 & AF 아이디 연동]
+        import urllib.parse
         keywords = extract_shop_keywords(st.session_state.analysis_result)
+        
         st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
         cols = st.columns(len(keywords))
-
-
+        
         for i, keyword in enumerate(keywords):
             with cols[i]:
-                # 1. 검색어 정제: 성별 + AI 키워드 (예: "남성 카키 기능성 반팔티")
-                # 공백이 포함된 전체 문장을 하나의 검색어로 만듭니다.
-                raw_search_term = f"{gender} {keyword}".strip()
+                # [해결 2] 쿠팡 검색어 유실 방지 인코딩 로직
+                # 검색어에 성별을 붙여서 정확도를 높입니다.
+                search_term = f"{gender} {keyword}".strip()
                 
-                # 2. [핵심] 쿠팡 검색용 URL 생성
-                # 검색어(q=) 부분을 먼저 인코딩해야 주소가 깨지지 않습니다.
-                encoded_query = urllib.parse.quote(raw_search_term)
-                target_url = f"https://www.coupang.com/np/search?q={encoded_query}"
+                # 1단계: 검색 결과 페이지 URL 생성 (한글 인코딩 포함)
+                quoted_query = urllib.parse.quote(search_term)
+                target_url = f"https://www.coupang.com/np/search?q={quoted_query}"
                 
-                # 3. [최종 해결] 전체 target_url을 다시 한번 인코딩하여 pageKey에 삽입
-                # 이렇게 '이중 처리'를 해줘야 link.coupang.com 리다이렉터를 통과해도 
-                # "반팔티"라는 뒷부분 단어가 잘리지 않고 끝까지 전달됩니다.
+                # 2단계: 전체 URL을 다시 인코딩하여 pageKey에 삽입 (이게 안 되면 뒷단어가 잘림)
+                # safe='' 를 주어 모든 특수문자를 인코딩하는 것이 핵심입니다.
                 final_encoded_url = urllib.parse.quote(target_url, safe='')
                 
-                # 4. 형님의 수익 아이디(AF5326630)와 결합된 최종 딥링크
+                # 3단계: 형님 아이디(AF5326630) 결합
                 shop_url = f"https://link.coupang.com/re/PCSWSDP?lptag=AF5326630&subid=stylescan&pageKey={final_encoded_url}"
                 
-                # 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
 
         
