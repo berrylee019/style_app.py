@@ -158,37 +158,31 @@ st.markdown('<p class="sub-title">실시간 비디오 분석으로 완성하는 
 st.markdown("#### 📹 촬영 가이드 및 정보 입력")
 c_v, c_u = st.columns([1.2, 1])
 
+import streamlit as st
+
+# ... 기존 코드 중 c_v, c_u 나누는 부분 ...
+
 with c_v:
-    st.markdown('<h4 style="color: #1a73e8;">📹 무료 체험 전 영상 참조하기</h4>', unsafe_allow_html=True)
+    st.markdown('<h4 style="color: #1a73e8; margin-top: 0;">📹 촬영 가이드 및 정보 입력</h4>', unsafe_allow_html=True)
     
-    # 블로그에서 사용하는 실제 영상 재생 주소입니다.
-    # object 태그 대신 iframe을 사용해야 Streamlit에서 에러 없이 돌아갑니다.
-    blog_video_url = "https://www.blogger.com/video.g?contentId=6023c4b258289095"
+    # 형님이 주신 유튜브 쇼츠 주소입니다.
+    # 쇼츠 주소도 st.video에서 바로 인식합니다!
+    video_url = "https://youtube.com/shorts/1vE5QSvW_Vg"
     
-    video_html = f"""
-    <div style="clear: both; text-align: center; background-color: #000; border-radius: 8px; overflow: hidden;">
-        <iframe 
-            src="{blog_video_url}" 
-            width="100%" 
-            height="350" 
-            frameborder="0" 
-            allowfullscreen 
-            style="border: none;">
-        </iframe>
-    </div>
-    """
-    
-    # 렌더링 (높이를 넉넉히 380으로 설정)
-    components.html(video_html, height=380)
-    st.caption("▲ 영상을 재생하여 촬영 가이드를 확인해 주세요.")
+    try:
+        # 유튜브 영상을 메인 화면 왼쪽 컬럼에 꽉 차게 배치
+        st.video(video_url)
+        st.caption("▲ 위 가이드 영상을 시청하신 후 촬영해 주세요.")
+    except Exception as e:
+        st.info("📺 가이드 영상을 참조하세요! (유튜브 연결 확인 중)")
 
 with c_u:
+    # 오른쪽 컬럼: 파일 업로드 및 성별 선택
     uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "mov", "avi"])
-    # [업그레이드 1] 성별 선택 UI 추가
     gender = st.radio("시각화할 모델 성별 선택", ["여성", "남성"], horizontal=True)
     
     if uploaded_file:
-        st.success("영상 준비 완료!")
+        st.success("✅ 영상 준비 완료!")
 
 # --- 꿀팁 섹션 ---
 st.divider()
