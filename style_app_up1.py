@@ -94,11 +94,18 @@ if uploaded_file:
             try:
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
+                # [프롬프트 수정] 쇼핑몰 검색 정확도를 높이는 로직 추가
                 prompt = f"""
-                Analyze {gender}'s style. Focus on Korean elegant fashion.
-                Start with [성별: {gender}].
-                # 1. 스타일 페르소나 # 2. 체형 강점 # 3. 퍼스널 컬러 # 4. 스타일링 팁
-                [중요] 마지막에 다음 형식을 포함하세요: # 쇼핑 키워드: [키워드1, 키워드2, 키워드3]
+                이 영상의 주인공은 {gender}이며, 한국인(Korean)입니다. 
+                분석 결과에 따라 실제 쇼핑몰(쿠팡)에서 검색했을 때 '의류 상품'이 즉시 노출될 수 있는 구체적인 키워드를 추출하세요.
+                
+                [쇼핑 키워드 추출 규칙]
+                1. 추상적인 단어(예: 우아한, 세련된, 스타일)는 절대 사용 금지.
+                2. 반드시 '소재/색상 + 아이템명' 조합으로 생성 (예: 실크 블라우스, 린넨 셔츠, 세미 와이드 슬랙스).
+                3. 해당 {gender}의 체형과 스타일에 가장 잘 어울리는 구체적인 상의, 하의, 아우터 위주로 선정.
+                
+                마지막 줄 형식 엄수:
+                # 쇼핑 키워드: [키워드1, 키워드2, 키워드3]
                 """
                 response = model.generate_content([prompt, video_part])
                 st.session_state.analysis_result = response.text
