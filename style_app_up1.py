@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 import re
 import openai
-import streamlit.components.v1 as components
+#import streamlit.components.v1 as components
 
 # 1. API 키 및 페이지 설정
 try:
