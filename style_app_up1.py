@@ -153,22 +153,9 @@ if 'analysis_result' in st.session_state:
                 # 이 주소 형식을 사용하면 쿠팡이 '형님의 실적'으로 인지하면서 
                 # 동시에 검색창에 키워드를 정확히 입력해 줍니다.
                 
-                # 1. 검색어 생성 및 1차 인코딩 (예: 남성 카키 기능성 반팔티)
-                search_query = f"{gender} {keyword}".strip()
-                encoded_query = urllib.parse.quote(search_query)
-                
-                # 2. 쿠팡 검색 결과 "전체 주소" 생성
-                target_url = f"https://www.coupang.com/np/search?q={encoded_query}"
-                
-                # 3. [핵심] 전체 주소를 다시 인코딩 (safe='' 필수)
-                # 이렇게 해야 쿠팡 서버가 주소를 중간에 끊지 않고 끝까지 읽습니다.
-                final_encoded_url = urllib.parse.quote(target_url, safe='')
-                
-                # 4. PCSWSDP 리다이렉터 사용 (검색 결과 전용)
-                shop_url = f"https://link.coupang.com/re/PCSWSDP?lptag=AF5326630&subid=stylescan&pageKey={final_encoded_url}"
-                
-                # 4. 버튼 생성
-                st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
+                # 방법 2: 단순화된 검색 쿼리 전달 방식
+                encoded_query = urllib.parse.quote(f"{gender} {keyword}")
+                shop_url = f"https://link.coupang.com/a/AF5326630?q={encoded_query}"
 
         
         st.caption("※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.")
