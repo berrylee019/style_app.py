@@ -205,13 +205,13 @@ with c_u:
         * **조명:** 역광을 피하고 밝은 곳에서 촬영하세요.
         """)
 
-    st.write("") 
+    st.write("---") 
 
     # 3. 파일 업로드
     uploaded_file = st.file_uploader("2️⃣ 촬영한 영상을 업로드하세요", type=["mp4", "mov", "avi"])
     
     if uploaded_file:
-        st.success("✅ 영상 준비 완료! 이제 분석을 시작하세요.")
+        st.success("✅ 영상 준비 완료! 아래 [AI 스타일 분석 시작] 버튼을 눌러 분석을 시작하세요.")
         # 여기에 '분석 시작' 버튼을 크게 배치하면 밸런스의 정점!
         #if st.button("🚀 StyleScan AI 분석 시작", use_container_width=True):
         #   st.balloons()
