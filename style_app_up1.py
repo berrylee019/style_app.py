@@ -166,7 +166,7 @@ with c_v:
     
     # 형님이 주신 유튜브 쇼츠 주소입니다.
     # 쇼츠 주소도 st.video에서 바로 인식합니다!
-    video_url = "https://youtube.com/shorts/1vE5QSvW_Vg"
+    video_url = "https://youtube.com/shorts/watch?v=1vE5QSvW_Vg"
     
     try:
         # 유튜브 영상을 메인 화면 왼쪽 컬럼에 꽉 차게 배치
