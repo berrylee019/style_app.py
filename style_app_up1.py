@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import re
 import openai
+import streamlit.components.v1 as components
 
 # 1. API 키 및 페이지 설정
 try:
@@ -34,6 +35,27 @@ st.markdown("""
     .stButton>button:hover { background-color: #1E40AF; transform: translateY(-2px); }
     </style>
     """, unsafe_allow_html=True)
+
+# --- 가이드 영상 섹션 시작 ---
+st.write("---")
+st.subheader("📺 StyleScan AI 사용 가이드")
+
+# 형님이 주신 HTML 코드를 Streamlit용 컴포넌트로 변환
+video_html = """
+<div style="display: flex; justify-content: center;">
+    <div class="separator" style="clear: both; text-align: center;">
+        <object class="BLOG_video_class" contentid="6023c4b258289095" 
+                width="100%" height="450" id="BLOG_video-6023c4b258289095" 
+                aria-label="동영상 업로드">
+        </object>
+    </div>
+</div>
+"""
+
+# HTML 실행 (너비와 높이를 적절히 조절했습니다)
+components.html(video_html, height=500)
+st.write("---")
+# --- 가이드 영상 섹션 끝 ---
 
 # --- [함수] PDF 생성 엔진 ---
 def create_pdf_file(text_content):
@@ -145,7 +167,7 @@ with col_txt:
     st.markdown("""
         <div style="position: relative; background: #E1F5FE; border-radius: 15px; padding: 15px; margin-top: 10px; border: 1px solid #B3E5FC;">
             <strong style="color: #0288D1; font-size: 1.1rem;">Styley:</strong><br>
-            <span style="color: #333;">"반가워요 형님! 오늘 형님의 성별과 스타일을 딱 맞춰서 베스트 룩을 시각화해드릴게유! ✨"</span>
+            <span style="color: #333;">"반갑습니다! 오늘 당신의 성별과 스타일을 딱 맞춰서 베스트 룩을 시각화해드릴게유! ✨"</span>
         </div>
     """, unsafe_allow_html=True)
 
@@ -158,7 +180,7 @@ c_v, c_u = st.columns([1.2, 1])
 
 with c_v:
     if os.path.exists("sample_guide.mp4"): st.video("sample_guide.mp4")
-    else: st.info("가이드 영상을 준비해 주셔요!")
+    else: st.info("가이드 영상을 참조하세요!")
 
 with c_u:
     uploaded_file = st.file_uploader("영상을 업로드하세요", type=["mp4", "mov", "avi"])
