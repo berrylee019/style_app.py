@@ -213,9 +213,9 @@ with c_u:
     if uploaded_file:
         st.success("✅ 영상 준비 완료! 이제 분석을 시작하세요.")
         # 여기에 '분석 시작' 버튼을 크게 배치하면 밸런스의 정점!
-        if st.button("🚀 StyleScan AI 분석 시작", use_container_width=True):
-            st.balloons()
-            st.info("AI가 영상을 분석 중입니다. 잠시만 기다려 주세요...")
+        #if st.button("🚀 StyleScan AI 분석 시작", use_container_width=True):
+        #   st.balloons()
+        #   st.info("AI가 영상을 분석 중입니다. 잠시만 기다려 주세요...")
 
 # --- 꿀팁 섹션 ---
 st.divider()
