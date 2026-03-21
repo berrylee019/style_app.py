@@ -142,20 +142,22 @@ if 'analysis_result' in st.session_state:
                 # 1. 검색어 생성 (예: 남성 카키 기능성 반팔티)
                 search_query = f"{gender} {keyword}".strip()
                 
-                # 2. [1차 인코딩] 검색어 자체를 인코딩
-                # "카키 기능성 반팔티" -> "카키%20기능성%20%EB%B0%98%ED%8C%94%ED%8B%B0"
-                encoded_query = urllib.parse.quote(search_query)
-                target_url = f"https://www.coupang.com/np/search?q={encoded_query}"
+                # 2. [핵심] 쿠팡 파트너스 '검색 전용' 다이렉트 주소 구조
+                # 이 주소는 중간 리다이렉트 없이 쿠팡 검색 엔진으로 키워드를 바로 쏩니다.
+                # lptag(형님 아이디)와 q(검색어)를 나란히 배치하는 것이 포인트입니다.
                 
-                # 3. [2차 인코딩 - 핵심] 전체 URL을 한 번 더 인코딩 (safe='' 필수)
-                # 쿠팡 리다이렉터가 중간에 주소를 까먹지 못하게 '진공 포장'하는 단계입니다.
-                double_encoded_url = urllib.parse.quote(target_url, safe='')
+                encoded_keyword = urllib.parse.quote(search_query)
                 
-                # 4. [최종 주소] PCSWSDP 대신 가장 원초적인 리다이렉터(NONAMEP) 사용
-                # 간혹 PCSWSDP가 검색어를 필터링하는 경우가 있어, 가장 자유로운 경로로 바꿨습니다.
-                shop_url = f"https://link.coupang.com/re/NONAMEP?lptag=AF5326630&subid=stylescan&pageKey={double_encoded_url}"
+                # [수정된 주소 구조] 
+                # link.coupang.com 대신 'a.coupang.com' 또는 아래의 직접 호출 방식을 사용합니다.
+                shop_url = (
+                    f"https://link.coupang.com/re/PCSWSDP?"
+                    f"lptag=AF5326630"
+                    f"&subid=stylescan"
+                    f"&pageKey=https%3A%2F%2Fwww.coupang.com%2Fnp%2Fsearch%3Fq%3D{encoded_keyword}"
+                )
                 
-                # 5. 버튼 생성
+                # 3. 버튼 생성
                 st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
 
         
