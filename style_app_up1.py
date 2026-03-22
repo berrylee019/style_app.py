@@ -26,7 +26,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- [함수] 쇼핑 키워드 추출 (강력한 정규식) ---
+# --- [함수] 쇼핑 키워드 추출 로직 ---
 def extract_shop_keywords(text):
     try:
         match = re.search(r'#\s*쇼핑\s*키워드\s*:\s*\[?(.*?)\]?$', text, re.MULTILINE)
@@ -36,7 +36,7 @@ def extract_shop_keywords(text):
             return [k for k in keywords if k][:3]
     except:
         pass
-    return ["기능성 티셔츠", "린넨 팬츠", "데일리 룩"] # 추출 실패 시 기본값
+    return ["기능성 티셔츠", "린넨 팬츠", "데일리 룩"]
 
 # --- UI 상단 레이아웃 ---
 col_img, col_txt = st.columns([1, 4])
@@ -48,7 +48,7 @@ with col_txt:
 
 st.markdown('<p class="main-title">👗 AI 스타일 가이드</p>', unsafe_allow_html=True)
 
-# --- 섹션 1: 설정 및 업로드 ---
+# --- 섹션 1: 업로드 영역 ---
 c_v, c_u = st.columns([1.2, 1])
 with c_v:
     video_html = '<iframe width="100%" height="500" src="https://www.youtube.com/embed/1vE5QSvW_Vg" frameborder="0" allowfullscreen></iframe>'
@@ -57,18 +57,16 @@ with c_u:
     gender = st.radio("1️⃣ 모델 성별 선택", ["여성", "남성"], horizontal=True)
     uploaded_file = st.file_uploader("2️⃣ 영상 업로드", type=["mp4", "mov", "avi"])
 
-# --- 섹션 2: 분석 실행 (할당량 에러 방지용 모델 변경) ---
+# --- 섹션 2: 분석 실행 ---
 if uploaded_file:
     if st.button("🚀 AI 스타일 분석 시작", use_container_width=True, type="primary"):
         with st.status("🔍 분석 중...") as status:
             try:
-                # 2.0-flash가 할당량이 찼다면 1.5-flash로 우회 시도
-                model = genai.GenerativeModel('gemini-1.5-flash') 
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 prompt = f"""
-                당신은 최고의 AI 스타일리스트입니다. {gender} 사용자의 영상을 분석하여 다음 규격에 맞춰 상세 리포트를 작성하세요.
-                1. 스타일 페르소나 / 2. 체형 강점 / 3. 퍼스널 컬러 / 4. 스타일링 팁
-                마지막 줄 형식 엄수: # 쇼핑 키워드: [키워드1, 키워드2, 키워드3]
+                Analyze the {gender}'s fashion style in this video briefly. 
+                Respond in Korean. Lastly, add '# 쇼핑 키워드: [Item1, Item2, Item3]' in Korean.
                 """
                 response = model.generate_content([prompt, video_part], request_options={"timeout": 600})
                 st.session_state.analysis_result = response.text
@@ -76,12 +74,12 @@ if uploaded_file:
             except Exception as e:
                 st.error(f"오류: {e}")
 
-# --- 섹션 3: 결과 및 [수익화 버튼] 무조건 출력 ---
+# --- 섹션 3: 결과 출력 및 [수익화 버튼] ---
 if 'analysis_result' in st.session_state:
     st.divider()
     st.markdown(st.session_state.analysis_result)
 
-    # 🛍️ 쿠팡 쇼핑 버튼 생성 섹션
+    # 1. 쇼핑 버튼 (쿠팡 검색어 강제 주입 방식)
     keywords = extract_shop_keywords(st.session_state.analysis_result)
     st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
     cols = st.columns(len(keywords))
@@ -89,20 +87,20 @@ if 'analysis_result' in st.session_state:
     for i, keyword in enumerate(keywords):
         with cols[i]:
             # [최종 솔루션] 숏링크 + 다이렉트 쿼리 조합
+            # 이 방식은 쿠팡 앱과 웹에서 검색어를 가장 잘 인식합니다.
             search_query = f"{gender} {keyword}".strip()
             encoded_query = urllib.parse.quote(search_query)
             
-            # AF5326630 형님 아이디가 박힌 가장 단순하고 강력한 검색 주소
+            # AF5326630 형님 아이디가 박힌 가장 단순한 검색 주소입니다.
             shop_url = f"https://link.coupang.com/a/AF5326630?q={encoded_query}"
             
             st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
             
     st.caption("※ 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다. (ID: AF5326630)")
-    st.divider()
 
-    # 🎨 추천 스타일 화보 생성 (이후 로직은 그대로)
+    # 2. 화보 생성 (이후 로직은 동일)
     if st.button(f"🎨 {gender} 추천 스타일 화보 생성", use_container_width=True):
-        # ... (화보 생성 로직) ...
+        # 화보 생성 코드 생략 (기존과 동일)
         pass
 
 st.markdown("<br><p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Copyright 2026. Microhard All rights reserved.</p>", unsafe_allow_html=True)
