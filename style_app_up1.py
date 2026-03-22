@@ -28,8 +28,15 @@ def get_coupang_products(keyword):
         signature = hmac.new(SECRET_KEY.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
         authorization = f"CEA algorithm=HmacSHA256, access-key={ACCESS_KEY}, signed-date={now}, signature={signature}"
         headers = {"Authorization": authorization, "Content-Type": "application/json;charset=UTF-8"}
-        response = requests.get(DOMAIN + URL, headers=headers, timeout=5)
-        res_json = response.json()
+        #response = requests.get(DOMAIN + URL, headers=headers, timeout=5)
+        #res_json = response.json()
+        response = requests.request(method, DOMAIN + URL, headers=headers)
+        data = response.json()
+
+        with st.sidebar:
+            st.write("🔍 **쿠팡 응답 데이터 원본:**")
+            st.json(data)
+            
         return res_json['data']['productData'] if res_json.get('data') else []
     except: return []
 
