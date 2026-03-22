@@ -21,38 +21,38 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 # --- [함수] 쿠팡 API 엔진 ---
 def get_coupang_products(keyword):
 
-    # 1. 고정 정보 및 키 설정 (Secret에서 가져오기)
+    # 1. 기본 설정
     DOMAIN = "https://api-gateway.coupang.com"
     URL = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
     METHOD = "GET"
     
-    # 2. 파라미터 및 쿼리 스트링 구성
-    # 쿠팡은 쿼리 스트링의 순서와 인코딩에 매우 민감합니다.
+    # 2. 파라미터 구성 (순서 고정)
     params = {"keyword": keyword, "limit": 1}
     query_string = urllib.parse.urlencode(params)
-    full_path_with_query = f"{URL}?{query_string}"
+    full_path = f"{URL}?{query_string}"
 
     try:
-        # 3. 시간 생성 (UTC 기준, 반드시 GMT 또는 12자리 숫자)
-        # 쿠팡 API 서버와 형님 컴퓨터의 시간 차이가 5분 이상 나면 에러가 날 수 있습니다.
-        now = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')
+        # 3. [핵심] 시간 형식 변경 (ISO 8601 형식: YYYYMMDDTHHMMSSZ)
+        # 쿠팡 API는 이 형식을 가장 안정적으로 받아들입니다.
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        datetime_str = now_utc.strftime('%Y%m%dT%H%M%SZ')
         
-        # 4. HMAC 메시지 조립 (형식: YYYYMMDDTHHMMSSZ + METHOD + PATH + QUERY)
-        # 주의: DOMAIN(https://...)은 포함하지 않습니다.
-        message = now + METHOD + full_path_with_query
+        # 4. HMAC 메시지 생성 (시간 + 메서드 + 경로/쿼리)
+        message = datetime_str + METHOD + full_path
         
-        # 5. 서명(Signature) 생성
+        # 5. 서명 생성
         signature = hmac.new(
             SECRET_KEY.encode('utf-8'), 
             message.encode('utf-8'), 
             hashlib.sha256
         ).hexdigest()
         
-        # 6. 헤더 구성 (★매우 중요: 쉼표 뒤에 공백이 없어야 할 수도 있고, 있어야 할 수도 있습니다.)
-        # 최신 규격에 맞춰 쉼표 뒤 공백을 제거한 밀착형 형식입니다.
+        # 6. [핵심] 헤더 조립 (공백 하나하나 쿠팡 표준 가이드 준수)
         authorization = (
-            f"CEA algorithm=HmacSHA256,access-key={ACCESS_KEY},"
-            f"signed-date={now},signature={signature}"
+            f"CEA algorithm=HmacSHA256, "
+            f"access-key={ACCESS_KEY}, "
+            f"signed-date={datetime_str}, "
+            f"signature={signature}"
         )
         
         headers = {
@@ -60,11 +60,11 @@ def get_coupang_products(keyword):
             "Content-Type": "application/json;charset=UTF-8"
         }
         
-        # 7. 실제 호출
-        response = requests.get(DOMAIN + full_path_with_query, headers=headers, timeout=10)
+        # 7. 호출
+        response = requests.get(DOMAIN + full_path, headers=headers, timeout=10)
         data = response.json()
 
-        # 사이드바 디버깅 출력
+        # 사이드바 확인용
         with st.sidebar:
             st.write("🔍 **쿠팡 최종 응답 데이터:**")
             st.json(data)
