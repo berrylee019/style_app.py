@@ -21,23 +21,25 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 # --- [함수] 쿠팡 API 엔진 ---
 def get_coupang_products(keyword):
 
-    # 1. 고정 정보 설정
+    # 1. 고정 정보 및 키 설정 (Secret에서 가져오기)
     DOMAIN = "https://api-gateway.coupang.com"
     URL = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
     METHOD = "GET"
     
-    # 2. 파라미터 설정 (인코딩 전 원본 데이터)
-    # limit=1로 테스트해보고 잘 나오면 나중에 숫자를 키우셔요.
+    # 2. 파라미터 및 쿼리 스트링 구성
+    # 쿠팡은 쿼리 스트링의 순서와 인코딩에 매우 민감합니다.
     params = {"keyword": keyword, "limit": 1}
     query_string = urllib.parse.urlencode(params)
-    full_url = f"{URL}?{query_string}" # 서명에 사용할 URL 완성
+    full_path_with_query = f"{URL}?{query_string}"
 
     try:
-        # 3. 시간 생성 (UTC 기준 12자리 숫자)
+        # 3. 시간 생성 (UTC 기준, 반드시 GMT 또는 12자리 숫자)
+        # 쿠팡 API 서버와 형님 컴퓨터의 시간 차이가 5분 이상 나면 에러가 날 수 있습니다.
         now = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')
         
-        # 4. HMAC 메시지 조립 (시간 + 메서드 + 전체URL)
-        message = now + METHOD + full_url
+        # 4. HMAC 메시지 조립 (형식: YYYYMMDDTHHMMSSZ + METHOD + PATH + QUERY)
+        # 주의: DOMAIN(https://...)은 포함하지 않습니다.
+        message = now + METHOD + full_path_with_query
         
         # 5. 서명(Signature) 생성
         signature = hmac.new(
@@ -46,12 +48,11 @@ def get_coupang_products(keyword):
             hashlib.sha256
         ).hexdigest()
         
-        # 6. 헤더 구성 (공백과 쉼표 위치가 매우 중요합니다!)
+        # 6. 헤더 구성 (★매우 중요: 쉼표 뒤에 공백이 없어야 할 수도 있고, 있어야 할 수도 있습니다.)
+        # 최신 규격에 맞춰 쉼표 뒤 공백을 제거한 밀착형 형식입니다.
         authorization = (
-            f"CEA algorithm=HmacSHA256, "
-            f"access-key={ACCESS_KEY}, "
-            f"signed-date={now}, "
-            f"signature={signature}"
+            f"CEA algorithm=HmacSHA256,access-key={ACCESS_KEY},"
+            f"signed-date={now},signature={signature}"
         )
         
         headers = {
@@ -59,13 +60,13 @@ def get_coupang_products(keyword):
             "Content-Type": "application/json;charset=UTF-8"
         }
         
-        # 7. 실제 호출 (DOMAIN + full_url)
-        response = requests.get(DOMAIN + full_url, headers=headers, timeout=10)
+        # 7. 실제 호출
+        response = requests.get(DOMAIN + full_path_with_query, headers=headers, timeout=10)
         data = response.json()
 
         # 사이드바 디버깅 출력
         with st.sidebar:
-            st.write("🔍 **쿠팡 최종 응답:**")
+            st.write("🔍 **쿠팡 최종 응답 데이터:**")
             st.json(data)
             
         if 'data' in data and 'productData' in data['data']:
