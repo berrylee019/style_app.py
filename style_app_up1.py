@@ -20,43 +20,50 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 
 # --- [함수] 쿠팡 API 엔진 ---
 def get_coupang_products(keyword):
+
     try:
         DOMAIN = "https://api-gateway.coupang.com"
-        # 1. URL 설정
-        URL = f"/v2/providers/affiliate_open_api/apis/openapi/v1/products/search?keyword={urllib.parse.quote(keyword)}&limit=1"
+        # 1. 경로와 쿼리를 분리해서 관리해야 에러가 안 납니다.
+        path = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
+        query = f"keyword={urllib.parse.quote(keyword)}&limit=1"
+        URL = f"{path}?{query}"
         
-        # 2. 시간을 'now'라는 이름으로 통일 (에러 방지 핵심!)
+        # 2. 시간 생성 (UTC)
         now = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')
-        method = "GET" # 메서드 명시
+        method = "GET"
         
-        # 3. HMAC 서명 생성 (이제 'now'가 정의되어 있어 에러가 안 납니다)
+        # 3. [핵심] HMAC 메시지 구성 (DOMAIN을 제외한 'URL' 전체가 포함되어야 함)
+        # 중요: URL 변수 안에 path와 query가 모두 포함된 상태여야 합니다.
         message = now + method + URL
-        signature = hmac.new(SECRET_KEY.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
         
-        # 4. 헤더 및 인증 설정
+        signature = hmac.new(
+            SECRET_KEY.encode('utf-8'), 
+            message.encode('utf-8'), 
+            hashlib.sha256
+        ).hexdigest()
+        
+        # 4. 헤더 설정 (공백 하나하나가 중요합니다)
         authorization = f"CEA algorithm=HmacSHA256, access-key={ACCESS_KEY}, signed-date={now}, signature={signature}"
         headers = {
             "Authorization": authorization, 
             "Content-Type": "application/json;charset=UTF-8"
         }
         
-        # 5. API 호출
-        response = requests.request(method, DOMAIN + URL, headers=headers, timeout=10)
+        # 5. 실제 요청
+        response = requests.get(DOMAIN + URL, headers=headers, timeout=10)
         data = response.json()
 
-        # 6. 사이드바에 원본 데이터 노출 (디버깅용)
+        # 디버깅용 출력
         with st.sidebar:
             st.write("🔍 **쿠팡 응답 데이터 원본:**")
             st.json(data)
             
-        # 7. 데이터 반환
         if 'data' in data and 'productData' in data['data']:
             return data['data']['productData']
         else:
             return []
             
     except Exception as e:
-        # 에러 발생 시 사이드바에 구체적인 내용 출력
         st.sidebar.error(f"⚠️ 코드 실행 에러: {e}")
         return []
 
