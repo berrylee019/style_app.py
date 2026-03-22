@@ -1,92 +1,118 @@
 import streamlit as st
 import google.generativeai as genai
+import hmac
+import hashlib
+import requests
+import json
+from datetime import datetime
 import urllib.parse
 import re
 import os
 
-# 1. API 설정
+# 1. API 설정 및 보안 키 로드
 try:
     genai.configure(api_key=st.secrets["MY_API_KEY"])
+    ACCESS_KEY = st.secrets["COUPANG_ACCESS_KEY"]
+    SECRET_KEY = st.secrets["COUPANG_SECRET_KEY"]
 except:
-    st.error("API 키가 없습니다! secrets.toml을 확인해 주세요.")
+    st.error("API 키 설정이 필요합니다! .streamlit/secrets.toml에 COUPANG_ACCESS_KEY와 SECRET_KEY를 넣어주세요.")
 
-# --- [함수] 쇼핑 키워드 추출 (에러 방지용) ---
+st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", layout="centered")
+
+# --- [함수] 쿠팡 API 호출 엔진 (HMAC 서명 로직 포함) ---
+def get_coupang_products(keyword):
+    DOMAIN = "https://api-gateway.coupang.com"
+    URL = f"/v2/providers/affiliate_open_api/apis/openapi/v1/products/search?keyword={urllib.parse.quote(keyword)}&limit=3"
+    METHOD = "GET"
+    
+    # 시간 생성 (GMT 기준)
+    now = datetime.utcnow().strftime('%y%m%dT%H%M%SZ')
+    
+    # 서명(Signature) 생성
+    message = now + METHOD + URL
+    signature = hmac.new(SECRET_KEY.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
+    
+    authorization = f"CEA algorithm=HmacSHA256, access-key={ACCESS_KEY}, signed-date={now}, signature={signature}"
+    
+    headers = {
+        "Authorization": authorization,
+        "Content-Type": "application/json;charset=UTF-8"
+    }
+    
+    try:
+        response = requests.get(DOMAIN + URL, headers=headers, timeout=10)
+        res_json = response.json()
+        if res_json.get('data'):
+            return res_json['data']['productData']
+        return []
+    except Exception as e:
+        print(f"쿠팡 API 호출 오류: {e}")
+        return []
+
+# --- [함수] 쇼핑 키워드 추출 ---
 def extract_shop_keywords(text):
     try:
         match = re.search(r'#\s*쇼핑\s*키워드\s*:\s*\[?(.*?)\]?$', text, re.MULTILINE)
         if match:
             raw = match.group(1).split(',')
-            keywords = [k.strip().replace('[', '').replace(']', '') for k in raw]
-            return [k for k in keywords if k][:3]
-    except:
-        pass
-    return ["기능성 반팔티", "와이드 팬츠", "데일리 코디"] # 기본값
+            return [k.strip().replace('[', '').replace(']', '') for k in raw][:3]
+    except: pass
+    return ["데일리 룩", "트렌디 패션"]
 
-# --- 메인 레이아웃 ---
-st.title("👗 AI 스타일 가이드")
+# --- UI 상단 ---
+st.title("👗 AI 스타일 가이드 PRO")
+st.info("형님, 이제 API 연동으로 실제 상품 정보를 실시간으로 긁어옵니다!")
+
 gender = st.radio("성별 선택", ["여성", "남성"], horizontal=True)
-uploaded_file = st.file_uploader("영상 업로드 (10초 내외 권장)", type=["mp4", "mov"])
+uploaded_file = st.file_uploader("영상 업로드 (10초 내외)", type=["mp4", "mov"])
 
-# --- 분석 실행 섹션 ---
+# --- 분석 및 상품 출력 ---
 if uploaded_file:
-    if st.button("🚀 AI 스타일 분석 시작", use_container_width=True, type="primary"):
-        # 이전 결과 초기화
-        if 'analysis_result' in st.session_state:
-            del st.session_state.analysis_result
-            
-        with st.status("🔍 AI가 영상을 정밀 분석 중입니다...", expanded=True) as status:
+    if st.button("🚀 AI 스타일 분석 및 상품 찾기", use_container_width=True, type="primary"):
+        with st.status("🔍 분석 및 상품 검색 중...") as status:
             try:
-                # [중요] 모델명을 안정적인 1.5-flash로 고정
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                video_data = uploaded_file.read()
-                video_part = {"mime_type": uploaded_file.type, "data": video_data}
+                # 1. Gemini 스타일 분석
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
+                prompt = f"Analyze {gender}'s style. Report briefly. Add '# 쇼핑 키워드: [Item1, Item2]' in Korean at the end."
                 
-                # 프롬프트를 간결하게 하여 처리 속도 향상
-                prompt = f"""
-                Analyze the {gender}'s style in this video. 
-                Write a brief report (Persona, Strengths, Tips). 
-                At the end, add '# 쇼핑 키워드: [Keyword1, Keyword2, Keyword3]' in Korean.
-                """
-                
-                # [핵심] 타임아웃을 10분으로 늘려 멈춤 현상 방지
-                response = model.generate_content(
-                    [prompt, video_part], 
-                    request_options={"timeout": 600}
-                )
-                
+                response = model.generate_content([prompt, video_part])
                 st.session_state.analysis_result = response.text
-                status.update(label="✅ 분석 완료!", state="complete")
                 
+                # 2. 키워드 추출 및 쿠팡 상품 검색
+                keywords = extract_shop_keywords(response.text)
+                all_products = []
+                for kw in keywords:
+                    # 성별을 붙여서 검색 정확도 높임
+                    products = get_coupang_products(f"{gender} {kw}")
+                    if products:
+                        all_products.append(products[0]) # 각 키워드별 1등 상품만
+                
+                st.session_state.products = all_products
+                status.update(label="✅ 분석 및 상품 매칭 완료!", state="complete")
             except Exception as e:
-                st.error(f"분석 중 멈춤/오류 발생: {e}")
-                st.info("💡 팁: 영상을 5~10초로 더 짧게 잘라서 다시 시도해 보세요!")
+                st.error(f"오류 발생: {e}")
 
-# --- [결과 및 쿠팡 버튼] 섹션 ---
-# 분석 결과가 세션에 저장되어 있다면 '무조건' 화면에 그립니다.
+# --- 결과 화면 출력 ---
 if 'analysis_result' in st.session_state:
     st.divider()
-    st.subheader("📊 AI 스타일 리포트")
-    st.markdown(st.session_state.analysis_result)
-
-    # 쇼핑 버튼 생성
-    keywords = extract_shop_keywords(st.session_state.analysis_result)
-    st.markdown("#### 🛍️ AI 추천 아이템 바로 구매하기")
+    st.markdown("### 📊 AI 스타일 리포트")
+    st.write(st.session_state.analysis_result)
     
-    cols = st.columns(len(keywords))
-    for i, keyword in enumerate(keywords):
-        with cols[i]:
-            # 1. 실제 쿠팡 검색 결과 주소를 먼저 만듭니다.
-            # 예: https://www.coupang.com/np/search?q=남성+린넨+셔츠
-            search_url = f"https://www.coupang.com/np/search?q={urllib.parse.quote(f'{gender} {keyword}')}"
-            
-            # 2. 이 주소 전체를 다시 한 번 안전하게 인코딩합니다. (가장 중요!)
-            # 특수문자(:, /, ?)가 살아있으면 쿠팡 리다이렉터가 주소를 잘라먹습니다.
-            encoded_full_url = urllib.parse.quote(search_url, safe='')
-            
-            # 3. 쿠팡 파트너스 'PC/모바일 공용 딥링크' 구조에 넣습니다.
-            # PCSWSDP는 주소(pageKey)를 그대로 목적지로 보내주는 강력한 리다이렉터입니다.
-            shop_url = f"https://link.coupang.com/re/PCSWSDP?lptag=AF5326630&subid=stylescan&pageKey={encoded_full_url}"
-            
-            st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
-            
-    st.caption("※ 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다. (ID: AF5326630)")
+    st.divider()
+    st.markdown("### 🛍️ AI 추천 실시간 핫템")
+    
+    if st.session_state.get('products'):
+        cols = st.columns(len(st.session_state.products))
+        for i, item in enumerate(st.session_state.products):
+            with cols[i]:
+                # 상품 카드 구현
+                st.image(item['productImage'], use_container_width=True)
+                st.markdown(f"**{item['productName'][:20]}...**")
+                st.markdown(f"### {item['productPrice']:,}원")
+                # 쿠팡 파트너스 API가 주는 주소는 100% 수익 링크입니다.
+                st.link_button("🚀 최저가 확인", item['productUrl'], use_container_width=True)
+    else:
+        st.warning("아직 매칭된 상품이 없습니다. 키워드를 다시 확인해 주세요.")
+
+    st.caption("※ 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다.")
