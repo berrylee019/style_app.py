@@ -20,12 +20,7 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 
 # --- [함수] 쿠팡 API 엔진 ---
 def get_coupang_products(keyword):
-    import hmac
-    import hashlib
-    import datetime
-    import requests
-    import urllib.parse
-    import streamlit as st
+
 
     # 1. 설정값 (SECRET에서 가져오기)
     DOMAIN = "https://api-gateway.coupang.com"
