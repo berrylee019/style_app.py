@@ -37,7 +37,7 @@ if uploaded_file:
         with st.status("🔍 AI가 영상을 정밀 분석 중입니다...", expanded=True) as status:
             try:
                 # [중요] 모델명을 안정적인 1.5-flash로 고정
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 video_data = uploaded_file.read()
                 video_part = {"mime_type": uploaded_file.type, "data": video_data}
                 
