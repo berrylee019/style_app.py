@@ -23,7 +23,7 @@ def get_coupang_products(keyword):
     try:
         DOMAIN = "https://api-gateway.coupang.com"
         URL = f"/v2/providers/affiliate_open_api/apis/openapi/v1/products/search?keyword={urllib.parse.quote(keyword)}&limit=1"
-        now = datetime.utcnow().strftime('%y%m%dT%H%M%SZ')
+        datetime_str = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')
         message = now + "GET" + URL
         signature = hmac.new(SECRET_KEY.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
         authorization = f"CEA algorithm=HmacSHA256, access-key={ACCESS_KEY}, signed-date={now}, signature={signature}"
