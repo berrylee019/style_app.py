@@ -20,24 +20,30 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 
 # --- [함수] 쿠팡 API 엔진 ---
 def get_coupang_products(keyword):
+    import hmac
+    import hashlib
+    import datetime
+    import requests
+    import urllib.parse
+    import streamlit as st
 
-    # 1. 기본 설정
+    # 1. 설정값 (SECRET에서 가져오기)
     DOMAIN = "https://api-gateway.coupang.com"
     URL = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
     METHOD = "GET"
     
-    # 2. 파라미터 구성 (순서 고정)
+    # 2. 파라미터 구성
     params = {"keyword": keyword, "limit": 1}
     query_string = urllib.parse.urlencode(params)
     full_path = f"{URL}?{query_string}"
 
     try:
-        # 3. [핵심] 시간 형식 변경 (ISO 8601 형식: YYYYMMDDTHHMMSSZ)
-        # 쿠팡 API는 이 형식을 가장 안정적으로 받아들입니다.
-        now_utc = datetime.datetime.now(datetime.timezone.utc)
-        datetime_str = now_utc.strftime('%Y%m%dT%H%M%SZ')
+        # 3. [핵심 변경] 쿠팡이 가장 선호하는 GMT 날짜 형식
+        # 예: 260323T124500Z (YYMMDDTHHMMSSZ)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        datetime_str = now.strftime('%y%m%dT%H%M%SZ')
         
-        # 4. HMAC 메시지 생성 (시간 + 메서드 + 경로/쿼리)
+        # 4. HMAC 메시지 조립
         message = datetime_str + METHOD + full_path
         
         # 5. 서명 생성
@@ -47,7 +53,8 @@ def get_coupang_products(keyword):
             hashlib.sha256
         ).hexdigest()
         
-        # 6. [핵심] 헤더 조립 (공백 하나하나 쿠팡 표준 가이드 준수)
+        # 6. [결정적 차이] Authorization 헤더의 공백과 형식을 공식 문서와 100% 일치시킴
+        # 주의: 'signed-date'와 'signature' 사이의 공백, 콤마 위치 확인!
         authorization = (
             f"CEA algorithm=HmacSHA256, "
             f"access-key={ACCESS_KEY}, "
