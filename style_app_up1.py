@@ -87,7 +87,7 @@ if uploaded_file:
         with st.status("🔍 분석 중...", expanded=True) as status:
             try:
                 # 모델명 gemini-1.5-flash로 수정완료
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 prompt = f"""
                 Analyze the {gender}'s fashion style in this video briefly. 
