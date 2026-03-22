@@ -50,7 +50,7 @@ if uploaded_file:
     if st.button("🚀 1단계: 스타일 분석 시작", use_container_width=True, type="primary"):
         with st.spinner("AI가 영상을 분석 중입니다... 잠시만 기다려 주세요."):
             try:
-                model = genai.GenerativeModel('gemini-3.0-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 prompt = f"Analyze {gender}'s style. Write a brief report. End with '# 쇼핑 키워드: [Item1, Item2, Item3]' in Korean."
                 
