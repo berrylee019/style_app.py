@@ -60,7 +60,12 @@ uploaded_file = st.file_uploader("영상 업로드 (5초 내외 권장)", type=[
 
 # --- [STEP 1] 영상 분석 (분석만 수행) ---
 if uploaded_file:
-    if st.button("2단계: 추천 상품 실시간 매칭"):
+    # 1단계 버튼
+    if st.button("1단계: 스타일 분석하기", key="btn_step1"):
+        # 분석 로직
+        pass
+        
+    if st.button("2단계: 추천 상품 실시간 매칭", key="btn_step2"):
         with st.spinner("네이버 쇼핑에서 최적의 상품을 찾는 중..."):
             # 쿠팡 대신 네이버 함수 호출!
             products = get_naver_products(keyword) 
