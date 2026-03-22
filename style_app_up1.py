@@ -21,41 +21,51 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 # --- [함수] 쿠팡 API 엔진 ---
 def get_coupang_products(keyword):
 
+    # 1. 고정 정보 설정
+    DOMAIN = "https://api-gateway.coupang.com"
+    URL = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
+    METHOD = "GET"
+    
+    # 2. 파라미터 설정 (인코딩 전 원본 데이터)
+    # limit=1로 테스트해보고 잘 나오면 나중에 숫자를 키우셔요.
+    params = {"keyword": keyword, "limit": 1}
+    query_string = urllib.parse.urlencode(params)
+    full_url = f"{URL}?{query_string}" # 서명에 사용할 URL 완성
+
     try:
-        DOMAIN = "https://api-gateway.coupang.com"
-        # 1. 경로와 쿼리를 분리해서 관리해야 에러가 안 납니다.
-        path = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
-        query = f"keyword={urllib.parse.quote(keyword)}&limit=1"
-        URL = f"{path}?{query}"
-        
-        # 2. 시간 생성 (UTC)
+        # 3. 시간 생성 (UTC 기준 12자리 숫자)
         now = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')
-        method = "GET"
         
-        # 3. [핵심] HMAC 메시지 구성 (DOMAIN을 제외한 'URL' 전체가 포함되어야 함)
-        # 중요: URL 변수 안에 path와 query가 모두 포함된 상태여야 합니다.
-        message = now + method + URL
+        # 4. HMAC 메시지 조립 (시간 + 메서드 + 전체URL)
+        message = now + METHOD + full_url
         
+        # 5. 서명(Signature) 생성
         signature = hmac.new(
             SECRET_KEY.encode('utf-8'), 
             message.encode('utf-8'), 
             hashlib.sha256
         ).hexdigest()
         
-        # 4. 헤더 설정 (공백 하나하나가 중요합니다)
-        authorization = f"CEA algorithm=HmacSHA256, access-key={ACCESS_KEY}, signed-date={now}, signature={signature}"
+        # 6. 헤더 구성 (공백과 쉼표 위치가 매우 중요합니다!)
+        authorization = (
+            f"CEA algorithm=HmacSHA256, "
+            f"access-key={ACCESS_KEY}, "
+            f"signed-date={now}, "
+            f"signature={signature}"
+        )
+        
         headers = {
-            "Authorization": authorization, 
+            "Authorization": authorization,
             "Content-Type": "application/json;charset=UTF-8"
         }
         
-        # 5. 실제 요청
-        response = requests.get(DOMAIN + URL, headers=headers, timeout=10)
+        # 7. 실제 호출 (DOMAIN + full_url)
+        response = requests.get(DOMAIN + full_url, headers=headers, timeout=10)
         data = response.json()
 
-        # 디버깅용 출력
+        # 사이드바 디버깅 출력
         with st.sidebar:
-            st.write("🔍 **쿠팡 응답 데이터 원본:**")
+            st.write("🔍 **쿠팡 최종 응답:**")
             st.json(data)
             
         if 'data' in data and 'productData' in data['data']:
