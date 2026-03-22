@@ -62,7 +62,7 @@ if uploaded_file:
     if st.button("🚀 AI 스타일 분석 시작", use_container_width=True, type="primary"):
         with st.status("🔍 분석 중...") as status:
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.0-flash')
                 video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
                 prompt = f"""
                 Analyze the {gender}'s fashion style in this video briefly. 
