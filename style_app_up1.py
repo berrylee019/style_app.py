@@ -73,7 +73,7 @@ if st.session_state.get('analysis_done'):
             keywords = extract_shop_keywords(st.session_state.analysis_result)
             found_products = []
             for kw in keywords:
-                res = get_coupang_products(f"{gender} {kw}")
+                res = get_coupang_products("반팔티")
                 if res: found_products.append(res[0])
             st.session_state.products = found_products
             st.session_state.products_done = True
