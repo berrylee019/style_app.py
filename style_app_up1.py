@@ -82,12 +82,21 @@ if st.session_state.get('analysis_done'):
 if st.session_state.get('products_done'):
     st.divider()
     st.subheader("🛒 실시간 추천 아이템")
-    cols = st.columns(len(st.session_state.products))
-    for i, item in enumerate(st.session_state.products):
-        with cols[i]:
-            with st.container(border=True):
-                st.image(item['productImage'], use_container_width=True)
-                st.markdown(f"**{item['productName'][:18]}...**")
-                st.markdown(f"**{item['productPrice']:,}원**")
-                st.link_button("최저가 확인", item['productUrl'], use_container_width=True)
+
+    products = st.session_state.get('products', [])
+    
+    if len(products) > 0:
+            # 상품이 1개라도 있을 때만 컬럼을 만듭니다.
+            cols = st.columns(len(products))
+            for i, item in enumerate(products):
+                with cols[i]:
+                    with st.container(border=True):
+                        st.image(item['productImage'], use_container_width=True)
+                        st.markdown(f"**{item['productName'][:18]}...**")
+                        st.markdown(f"**{item['productPrice']:,}원**")
+                        st.link_button("최저가 확인", item['productUrl'], use_container_width=True)
+    else:
+        # 상품을 못 찾았을 때의 예외 처리
+        st.warning("앗, 현재 키워드와 일치하는 상품이 쿠팡에 없네요. 다른 스타일로 다시 시도해 보셔요!")
+        
     st.caption("※ 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다.")
