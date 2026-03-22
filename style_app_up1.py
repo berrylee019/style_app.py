@@ -89,15 +89,17 @@ if st.session_state.get('analysis_done'):
     st.info(st.session_state.analysis_result)
     
     # 분석이 끝난 후에만 '상품 찾기' 버튼이 등장합니다. (부하 분산)
-    if st.button("🛍️ 2단계: 추천 상품 실시간 매칭", use_container_width=True):
-        with st.spinner("쿠팡에서 최적의 상품을 찾는 중..."):
-            keywords = extract_shop_keywords(st.session_state.analysis_result)
-            found_products = []
-            for kw in keywords:
-                res = get_coupang_products("반팔티")
-                if res: found_products.append(res[0])
-            st.session_state.products = found_products
-            st.session_state.products_done = True
+    if st.button("2단계: 추천 상품 실시간 매칭"):
+        with st.spinner("쿠팡에서 최적의 상품을 찾는 중입니다..."):
+            # 여기서 keyword가 세션 상태에 잘 저장되어 있는지 확인!
+            target_keyword = st.session_state.get('search_keyword', '반팔티') 
+            products = get_coupang_products(target_keyword)
+            
+            if products:
+                st.success(f"총 {len(products)}개의 상품을 찾았습니다!")
+                st.session_state['coupang_products'] = products
+            else:
+                st.warning("앗, 상품을 가져오지 못했습니다. 사이드바의 쿠팡 원본 데이터를 확인해 보세요!")
 
 # --- [STEP 3] 최종 상품 카드 출력 ---
 if st.session_state.get('products_done'):
