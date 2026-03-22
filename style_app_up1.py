@@ -65,7 +65,7 @@ if uploaded_file:
                 video_data = uploaded_file.read()
                 
                 # Gemini 모델 설정 (비전 기능 사용)
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 # 성별 맞춤 프롬프트
                 prompt = f"""
