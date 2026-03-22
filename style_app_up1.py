@@ -75,12 +75,17 @@ if 'analysis_result' in st.session_state:
     cols = st.columns(len(keywords))
     for i, keyword in enumerate(keywords):
         with cols[i]:
-            # [수익 최적화 링크] 검색어 유실 없는 간편 링크 방식
-            search_query = f"{gender} {keyword}".strip()
-            encoded_query = urllib.parse.quote(search_query)
+            # 1. 실제 쿠팡 검색 결과 주소를 먼저 만듭니다.
+            # 예: https://www.coupang.com/np/search?q=남성+린넨+셔츠
+            search_url = f"https://www.coupang.com/np/search?q={urllib.parse.quote(f'{gender} {keyword}')}"
             
-            # AF5326630 아이디와 검색어를 다이렉트로 결합
-            shop_url = f"https://link.coupang.com/a/AF5326630?q={encoded_query}"
+            # 2. 이 주소 전체를 다시 한 번 안전하게 인코딩합니다. (가장 중요!)
+            # 특수문자(:, /, ?)가 살아있으면 쿠팡 리다이렉터가 주소를 잘라먹습니다.
+            encoded_full_url = urllib.parse.quote(search_url, safe='')
+            
+            # 3. 쿠팡 파트너스 'PC/모바일 공용 딥링크' 구조에 넣습니다.
+            # PCSWSDP는 주소(pageKey)를 그대로 목적지로 보내주는 강력한 리다이렉터입니다.
+            shop_url = f"https://link.coupang.com/re/PCSWSDP?lptag=AF5326630&subid=stylescan&pageKey={encoded_full_url}"
             
             st.link_button(f"🛒 {keyword}", shop_url, use_container_width=True)
             
