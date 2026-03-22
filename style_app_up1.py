@@ -6,6 +6,7 @@ import requests
 from datetime import datetime
 import urllib.parse
 import re
+import datetime
 
 # 1. API 설정
 try:
