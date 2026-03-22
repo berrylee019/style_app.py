@@ -19,63 +19,28 @@ except:
 st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", layout="centered")
 
 # --- [함수] 쿠팡 API 엔진 ---
-def get_coupang_products(keyword):
+def get_naver_products(keyword):
 
-
-    # 1. 설정 (키 값 확인 필수!)
-    DOMAIN = "https://api-gateway.coupang.com"
-    path = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
+    # 1. 네이버 API 설정 (Secrets에서 가져오기)
+    client_id = st.secrets["NAVER_CLIENT_ID"]
+    client_secret = st.secrets["NAVER_CLIENT_SECRET"]
     
-    # 2. 파라미터 구성 (쿠팡은 'limit=1' 같은 단순 쿼리를 좋아합니다)
-    # keyword 인코딩 방식을 더 안전하게 변경
-    encoded_keyword = urllib.parse.quote(keyword)
-    query_string = f"keyword={encoded_keyword}&limit=1"
-    full_path = f"{path}?{query_string}"
+    # 2. API 주소 (쇼핑 검색)
+    url = f"https://openapi.naver.com/v1/search/shop.json?query={keyword}&display=5&sort=sim"
+    
+    headers = {
+        "X-Naver-Client-Id": client_id,
+        "X-Naver-Client-Secret": client_secret
+    }
 
     try:
-        # 3. 시간 생성 (UTC 12자리 형식: YYMMDDTHHMMSSZ)
-        # 쿠팡 공식 예제에서 가장 많이 쓰이는 형식입니다.
-        now = datetime.datetime.now(datetime.timezone.utc)
-        datetime_str = now.strftime('%y%m%dT%H%M%SZ')
-        
-        # 4. HMAC 메시지 조립 (순서: 시간 + 메서드 + 경로?쿼리)
-        method = "GET"
-        message = datetime_str + method + full_path
-        
-        # 5. 서명 생성 (핵심 로직)
-        signature = hmac.new(
-            SECRET_KEY.encode('utf-8'), 
-            message.encode('utf-8'), 
-            hashlib.sha256
-        ).hexdigest()
-        
-        # 6. 헤더 조립 (공백 하나까지 공식 SDK와 일치시킴)
-        authorization = (
-            f"CEA algorithm=HmacSHA256, "
-            f"access-key={ACCESS_KEY}, "
-            f"signed-date={datetime_str}, "
-            f"signature={signature}"
-        )
-        
-        headers = {
-            "Authorization": authorization,
-            "Content-Type": "application/json;charset=UTF-8"
-        }
-        
-        # 7. 실제 호출
-        response = requests.get(DOMAIN + full_path, headers=headers, timeout=10)
-        data = response.json()
-
-        # 사이드바 확인 (범인 검거용)
-        with st.sidebar:
-            st.write("🔍 **쿠팡 최종 응답:**")
-            st.json(data)
-            
-        if 'data' in data and 'productData' in data['data']:
-            return data['data']['productData']
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('items', []) # 네이버는 'items'라는 이름으로 줍니다.
         else:
+            st.sidebar.error(f"⚠️ 네이버 에러: {response.status_code}")
             return []
-            
     except Exception as e:
         st.sidebar.error(f"⚠️ 코드 실행 에러: {e}")
         return []
@@ -95,19 +60,19 @@ uploaded_file = st.file_uploader("영상 업로드 (5초 내외 권장)", type=[
 
 # --- [STEP 1] 영상 분석 (분석만 수행) ---
 if uploaded_file:
-    if st.button("🚀 1단계: 스타일 분석 시작", use_container_width=True, type="primary"):
-        with st.spinner("AI가 영상을 분석 중입니다... 잠시만 기다려 주세요."):
-            try:
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                video_part = {"mime_type": uploaded_file.type, "data": uploaded_file.read()}
-                prompt = f"Analyze {gender}'s style. Write a brief report. End with '# 쇼핑 키워드: [Item1, Item2, Item3]' in Korean."
-                
-                response = model.generate_content([prompt, video_part], request_options={"timeout": 300})
-                st.session_state.analysis_result = response.text
-                st.session_state.analysis_done = True # 분석 완료 플래그
-                st.rerun() # 결과 출력을 위해 화면 갱신
-            except Exception as e:
-                st.error(f"분석 중 오류: {e}")
+    if st.button("2단계: 추천 상품 실시간 매칭"):
+        with st.spinner("네이버 쇼핑에서 최적의 상품을 찾는 중..."):
+            # 쿠팡 대신 네이버 함수 호출!
+            products = get_naver_products(keyword) 
+            
+            if products:
+                for item in products:
+                    # 네이버는 title에 <b> 태그가 섞여 있어 제거해주는 게 좋습니다.
+                    clean_title = item['title'].replace('<b>', '').replace('</b>', '')
+                    st.write(f"🎁 {clean_title}")
+                    st.write(f"🔗 [상품 보러가기]({item['link']})")
+            else:
+                st.warning("상품을 찾지 못했습니다.")
 
 # --- [STEP 2] 결과 출력 및 상품 매칭 ---
 if st.session_state.get('analysis_done'):
