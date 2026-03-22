@@ -22,34 +22,41 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 def get_coupang_products(keyword):
     try:
         DOMAIN = "https://api-gateway.coupang.com"
+        # 1. URL 설정
         URL = f"/v2/providers/affiliate_open_api/apis/openapi/v1/products/search?keyword={urllib.parse.quote(keyword)}&limit=1"
-        datetime_str = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')
-        message = now + "GET" + URL
-        signature = hmac.new(SECRET_KEY.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
-        authorization = f"CEA algorithm=HmacSHA256, access-key={ACCESS_KEY}, signed-date={now}, signature={signature}"
-        headers = {"Authorization": authorization, "Content-Type": "application/json;charset=UTF-8"}
-        #response = requests.get(DOMAIN + URL, headers=headers, timeout=5)
-        #res_json = response.json()
-        # 1. API 호출 및 데이터 수신
-        response = requests.request(method, DOMAIN + URL, headers=headers)
         
-        # 2. JSON 데이터 변환
+        # 2. 시간을 'now'라는 이름으로 통일 (에러 방지 핵심!)
+        now = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')
+        method = "GET" # 메서드 명시
+        
+        # 3. HMAC 서명 생성 (이제 'now'가 정의되어 있어 에러가 안 납니다)
+        message = now + method + URL
+        signature = hmac.new(SECRET_KEY.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
+        
+        # 4. 헤더 및 인증 설정
+        authorization = f"CEA algorithm=HmacSHA256, access-key={ACCESS_KEY}, signed-date={now}, signature={signature}"
+        headers = {
+            "Authorization": authorization, 
+            "Content-Type": "application/json;charset=UTF-8"
+        }
+        
+        # 5. API 호출
+        response = requests.request(method, DOMAIN + URL, headers=headers, timeout=10)
         data = response.json()
 
-        # 3. 사이드바에 원본 데이터 노출 (디버깅용)
+        # 6. 사이드바에 원본 데이터 노출 (디버깅용)
         with st.sidebar:
             st.write("🔍 **쿠팡 응답 데이터 원본:**")
-            st.json(data) # 형님, 여기서 rCode와 rMessage를 꼭 확인하셔야 합니다!
+            st.json(data)
             
-        # 4. 데이터 반환 (변수명을 data로 통일!)
-        # data['data']['productData']가 있는지 확인하고 없으면 빈 리스트를 줍니다.
+        # 7. 데이터 반환
         if 'data' in data and 'productData' in data['data']:
             return data['data']['productData']
         else:
             return []
             
     except Exception as e:
-        # 에러가 나면 사이드바에 에러 내용도 살짝 찍어주면 더 좋습니다.
+        # 에러 발생 시 사이드바에 구체적인 내용 출력
         st.sidebar.error(f"⚠️ 코드 실행 에러: {e}")
         return []
 
