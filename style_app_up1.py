@@ -74,7 +74,8 @@ if st.session_state.get('analysis_done'):
     
     # 중복 ID 에러 방지를 위해 고유한 key 부여
     if st.button("2단계: 추천 상품 실시간 매칭", key="matching_step_btn"):
-        target_keyword = st.session_state.get('search_keyword', '패션아이템')
+        base_keyword = st.session_state.get('search_keyword', '패션아이템')
+        target_keyword = f"{gender} {base_keyword}"
         
         with st.spinner(f"'{target_keyword}' 상품을 찾는 중..."):
             products = get_naver_products(target_keyword)
@@ -104,6 +105,9 @@ if st.session_state.get('products_done'):
                     
                     # 제목에서 <b> 태그 제거
                     clean_title = item['title'].replace('<b>', '').replace('</b>', '')
+                    # 혹시 모르니 여성 선택 시 '남성' 단어가 포함된 상품은 필터링하는 로직 (선택사항)
+                    if gender == "여성" and "남성" in clean_title:
+                        continue # 남성용은 건너뛰기
                     st.markdown(f"**{clean_title[:15]}...**")
                     
                     # 가격 표시 (네이버는 lprice가 가격입니다)
