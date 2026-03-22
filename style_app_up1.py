@@ -22,34 +22,34 @@ st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", la
 def get_coupang_products(keyword):
 
 
-    # 1. 설정값 (SECRET에서 가져오기)
+    # 1. 설정 (키 값 확인 필수!)
     DOMAIN = "https://api-gateway.coupang.com"
-    URL = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
-    METHOD = "GET"
+    path = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
     
-    # 2. 파라미터 구성
-    params = {"keyword": keyword, "limit": 1}
-    query_string = urllib.parse.urlencode(params)
-    full_path = f"{URL}?{query_string}"
+    # 2. 파라미터 구성 (쿠팡은 'limit=1' 같은 단순 쿼리를 좋아합니다)
+    # keyword 인코딩 방식을 더 안전하게 변경
+    encoded_keyword = urllib.parse.quote(keyword)
+    query_string = f"keyword={encoded_keyword}&limit=1"
+    full_path = f"{path}?{query_string}"
 
     try:
-        # 3. [핵심 변경] 쿠팡이 가장 선호하는 GMT 날짜 형식
-        # 예: 260323T124500Z (YYMMDDTHHMMSSZ)
+        # 3. 시간 생성 (UTC 12자리 형식: YYMMDDTHHMMSSZ)
+        # 쿠팡 공식 예제에서 가장 많이 쓰이는 형식입니다.
         now = datetime.datetime.now(datetime.timezone.utc)
         datetime_str = now.strftime('%y%m%dT%H%M%SZ')
         
-        # 4. HMAC 메시지 조립
-        message = datetime_str + METHOD + full_path
+        # 4. HMAC 메시지 조립 (순서: 시간 + 메서드 + 경로?쿼리)
+        method = "GET"
+        message = datetime_str + method + full_path
         
-        # 5. 서명 생성
+        # 5. 서명 생성 (핵심 로직)
         signature = hmac.new(
             SECRET_KEY.encode('utf-8'), 
             message.encode('utf-8'), 
             hashlib.sha256
         ).hexdigest()
         
-        # 6. [결정적 차이] Authorization 헤더의 공백과 형식을 공식 문서와 100% 일치시킴
-        # 주의: 'signed-date'와 'signature' 사이의 공백, 콤마 위치 확인!
+        # 6. 헤더 조립 (공백 하나까지 공식 SDK와 일치시킴)
         authorization = (
             f"CEA algorithm=HmacSHA256, "
             f"access-key={ACCESS_KEY}, "
@@ -62,13 +62,13 @@ def get_coupang_products(keyword):
             "Content-Type": "application/json;charset=UTF-8"
         }
         
-        # 7. 호출
+        # 7. 실제 호출
         response = requests.get(DOMAIN + full_path, headers=headers, timeout=10)
         data = response.json()
 
-        # 사이드바 확인용
+        # 사이드바 확인 (범인 검거용)
         with st.sidebar:
-            st.write("🔍 **쿠팡 최종 응답 데이터:**")
+            st.write("🔍 **쿠팡 최종 응답:**")
             st.json(data)
             
         if 'data' in data and 'productData' in data['data']:
