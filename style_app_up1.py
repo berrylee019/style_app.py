@@ -30,15 +30,28 @@ def get_coupang_products(keyword):
         headers = {"Authorization": authorization, "Content-Type": "application/json;charset=UTF-8"}
         #response = requests.get(DOMAIN + URL, headers=headers, timeout=5)
         #res_json = response.json()
+        # 1. API 호출 및 데이터 수신
         response = requests.request(method, DOMAIN + URL, headers=headers)
+        
+        # 2. JSON 데이터 변환
         data = response.json()
 
+        # 3. 사이드바에 원본 데이터 노출 (디버깅용)
         with st.sidebar:
             st.write("🔍 **쿠팡 응답 데이터 원본:**")
-            st.json(data)
+            st.json(data) # 형님, 여기서 rCode와 rMessage를 꼭 확인하셔야 합니다!
             
-        return res_json['data']['productData'] if res_json.get('data') else []
-    except: return []
+        # 4. 데이터 반환 (변수명을 data로 통일!)
+        # data['data']['productData']가 있는지 확인하고 없으면 빈 리스트를 줍니다.
+        if 'data' in data and 'productData' in data['data']:
+            return data['data']['productData']
+        else:
+            return []
+            
+    except Exception as e:
+        # 에러가 나면 사이드바에 에러 내용도 살짝 찍어주면 더 좋습니다.
+        st.sidebar.error(f"⚠️ 코드 실행 에러: {e}")
+        return []
 
 # --- [함수] 키워드 추출 ---
 def extract_shop_keywords(text):
