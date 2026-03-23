@@ -4,22 +4,23 @@ import requests
 import re
 import urllib.parse
 
-# 1. API 및 환경 설정
+# 1. 형님의 API 설정 (직접 입력 혹은 Secrets 활용)
+NAVER_ID = "CS3M6p8wqe7L4t1W4pbW"
+NAVER_SECRET = "uh542B_0BS"
+
 try:
     genai.configure(api_key=st.secrets["MY_API_KEY"])
-    NAVER_ID = st.secrets["NAVER_CLIENT_ID"]
-    NAVER_SECRET = st.secrets["NAVER_CLIENT_SECRET"]
-except Exception as e:
-    st.error(f"⚠️ 설정 오류! .streamlit/secrets.toml 확인: {e}")
+except:
+    st.error("⚠️ Gemini API 키(MY_API_KEY)를 Streamlit Secrets에 설정해주세요.")
 
 st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", layout="wide")
 
-# --- [함수] 네이버 쇼핑 API (성별 고립 검색) ---
-def get_naver_item(gender, keyword):
-    # 반대 성별 키워드를 검색어에서 제거(-)하여 성별 섞임을 원천 차단
+# --- [함수] 네이버 쇼핑 API (성별 격리 강화형) ---
+def get_strictly_gender_item(gender, keyword):
+    # 성별 섞임을 막기 위한 강력한 제외어(-) 전략
     exclude = "남성" if gender == "여성" else "여성"
-    # 예: "여성용 오버핏 자켓 -남성 -공용"
-    refined_query = f"{gender}용 {keyword} -{exclude} -공용"
+    # 검색어 예: "여성 오버핏 코트 -남성 -공용 -남녀공용"
+    refined_query = f"{gender} {keyword} -{exclude} -공용 -남녀공용"
     
     encoded_keyword = urllib.parse.quote(refined_query)
     url = f"https://openapi.naver.com/v1/search/shop.json?query={encoded_keyword}&display=1&sort=sim"
@@ -38,96 +39,73 @@ def get_naver_item(gender, keyword):
     except:
         return None
 
-# --- [함수] 4개의 개별 키워드 정밀 추출 ---
-def extract_keywords_list(text):
-    # Gemini가 출력한 리포트에서 # 쇼핑 키워드: [A, B, C, D] 추출
+# --- [함수] 4개 키워드 추출 ---
+def extract_4_keywords(text):
     match = re.search(r'#\s*쇼핑\s*키워드\s*:\s*\[(.*?)\]', text, re.MULTILINE)
     if match:
-        raw = match.group(1).split(',')
-        return [k.strip().replace('[', '').replace(']', '') for k in raw][:4]
-    return ["트렌디 상의", "슬림핏 하의", "데일리 슈즈", "패션 소품"]
+        k_list = [k.strip().replace('[', '').replace(']', '') for k in match.group(1).split(',')]
+        return k_list[:4]
+    return ["자켓", "팬츠", "스니커즈", "백"]
 
 # --- UI 레이아웃 ---
 st.title("👗 AI 스타일 가이드 PRO")
-st.markdown("##### 형님, 네이버 쇼핑 엔진으로 성별은 정확하게, 수익화는 안전하게 잡았습니다.")
+st.markdown("##### 형님, 네이버 API로 성별은 '칼'같이, 수익은 블로그 원고로 '확실'하게!")
 
-if 'analysis_done' not in st.session_state: st.session_state['analysis_done'] = False
-if 'products_done' not in st.session_state: st.session_state['products_done'] = False
-
-gender = st.radio("성별 선택", ["여성", "남성"], horizontal=True)
+gender = st.radio("분석 성별", ["여성", "남성"], horizontal=True)
 uploaded_file = st.file_uploader("패션 영상 업로드", type=["mp4", "mov"])
 
-# --- [STEP 1] 영상 분석 ---
 if uploaded_file:
-    if st.button("1단계: AI 스타일 분석하기", key="analysis_btn"):
-        with st.spinner(f"AI가 {gender} 스타일링을 정밀 분석 중입니다..."):
+    if st.button("🚀 스타일 분석 및 수익 아이템 매칭 시작"):
+        with st.spinner("AI가 영상을 분석하고 성별에 맞는 아이템을 매칭 중입니다..."):
             try:
+                # 1. Gemini 영상 분석
                 video_data = uploaded_file.read()
-                # 최신 Gemini 1.5 Flash 사용 (영상 분석 최적화)
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 prompt = f"""
-                영상 속 인물의 패션 스타일을 분석해서 전문가 리포트를 작성해줘.
-                사용자의 성별은 반드시 '{gender}'이야. 절대 반대 성별 상품을 추천하면 안 돼.
-                마지막 줄에 반드시 아래 형식을 지켜서 서로 다른 4가지 쇼핑 아이템을 뽑아줘:
-                # 쇼핑 키워드: [{gender} 상의, {gender} 하의, {gender} 신발, {gender} 액세서리]
+                영상 속 스타일을 분석해서 패션 리포트를 작성해줘. 성별: {gender}.
+                마지막 줄에 반드시 이 형식을 지켜서 4개 아이템을 뽑아줘:
+                # 쇼핑 키워드: [{gender} 상의, {gender} 하의, {gender} 신발, {gender} 잡화]
                 """
+                response = model.generate_content([prompt, {"mime_type": "video/mp4", "data": video_data}])
                 
-                response = model.generate_content([
-                    prompt, {"mime_type": "video/mp4", "data": video_data}
-                ])
+                # 2. 결과 저장 및 키워드 추출
+                analysis_text = response.text
+                keywords = extract_4_keywords(analysis_text)
                 
-                st.session_state['analysis_result'] = response.text
-                st.session_state['target_keywords'] = extract_keywords_list(response.text)
-                st.session_state['analysis_done'] = True
-                st.rerun()
+                # 3. 네이버 API 개별 호출 (4회)
+                final_products = []
+                for kw in keywords:
+                    prod = get_strictly_gender_item(gender, kw)
+                    if prod: final_products.append(prod)
+                
+                # --- 결과 화면 출력 ---
+                st.divider()
+                st.subheader("📊 AI 분석 리포트")
+                st.info(analysis_text)
+                
+                st.subheader(f"🛒 추천 {gender} 아이템 4선")
+                cols = st.columns(4)
+                
+                # 블로그 원고용 텍스트 빌더
+                blog_script = f"## 오늘의 {gender} 스타일링 추천 리포트\n\n{analysis_text}\n\n---\n### ✨ 추천 아이템 리스트\n"
+
+                for i, item in enumerate(final_products):
+                    with cols[i]:
+                        title = item['title'].replace('<b>', '').replace('</b>', '')
+                        st.image(item['image'], use_container_width=True)
+                        st.markdown(f"**{title[:15]}...**")
+                        st.markdown(f"**{int(item['lprice']):,}원**")
+                        # 현재는 네이버 쇼핑 링크 (수익화를 위해 블로그 활용 권장)
+                        st.link_button("최저가 확인", item['link'], use_container_width=True)
+                        
+                        blog_script += f"{i+1}. {title}\n- 가격: {int(item['lprice']):,}원\n"
+
+                # --- 수익화 핵심: 블로그 자동 원고 ---
+                st.divider()
+                st.subheader("✍️ 수익 창출용 블로그 원고 (복사해서 쓰세요!)")
+                blog_script += f"\n---\n[형님의 수익 링크 넣는 곳]\n{gender} 패션 더보기 👉 https://naver.me/FdoTycFY\n"
+                st.text_area("네이버 블로그/포스트에 바로 붙여넣기", blog_script, height=300)
+                st.success("위 원고를 복사해서 블로그에 올리고 형님의 naver.me 링크를 달면 애드포스트 수익이 발생합니다!")
+
             except Exception as e:
-                st.error(f"분석 오류: {e}")
-
-# --- [STEP 2] 아이템 매칭 ---
-if st.session_state.get('analysis_done'):
-    st.divider()
-    st.subheader("📊 AI 스타일 리포트")
-    st.info(st.session_state.analysis_result)
-    
-    if st.button("2단계: 추천 상품 4종 매칭", key="matching_btn"):
-        with st.spinner("네이버 쇼핑에서 아이템별 최저가를 찾는 중..."):
-            keywords = st.session_state.get('target_keywords', [])
-            final_items = []
-            
-            for kw in keywords:
-                res = get_naver_item(gender, kw)
-                if res: final_items.append(res)
-            
-            if final_items:
-                st.session_state['matched_products'] = final_items
-                st.session_state['products_done'] = True
-                st.rerun()
-
-# --- [STEP 3] 최종 결과 전시 (수익화 연결) ---
-if st.session_state.get('products_done'):
-    st.divider()
-    st.subheader(f"🛒 {gender} 맞춤 실시간 추천 리스트")
-    
-    products = st.session_state.get('matched_products', [])
-    cols = st.columns(len(products))
-    
-    for i, item in enumerate(products):
-        with cols[i]:
-            with st.container(border=True):
-                # 이미지 및 정보
-                st.image(item['image'], use_container_width=True)
-                clean_title = item['title'].replace('<b>', '').replace('</b>', '')
-                st.markdown(f"**{clean_title[:15]}...**")
-                st.markdown(f"**{int(item['lprice']):,}원**")
-                
-                # --- [수익화 전략 포인트] ---
-                # 네이버 쇼핑은 링크 자체에 형님의 제휴 마케팅 코드를 심는 방식이 필요합니다.
-                # 현재는 기본 네이버 최저가 링크로 연결되지만, 
-                # 나중에 네이버 애드포스트 코드가 나오면 URL 뒤에 ?tracking_id=형님ID 식으로 붙이면 됩니다.
-                naver_url = item['link']
-                
-                st.link_button("🎁 최저가 구매하기", naver_url, use_container_width=True, type="primary")
-
-    st.markdown("---")
-    st.caption(f"※ 본 추천은 네이버 쇼핑 API를 통한 {gender}용 실시간 데이터입니다.")
+                st.error(f"오류 발생: {e}")
