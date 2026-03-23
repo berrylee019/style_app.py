@@ -121,7 +121,7 @@ if uploaded_file and st.button("🚀 스타일 분석 및 수익 아이템 매�
         try:
             # 1. Gemini 영상 분석
             video_data = uploaded_file.read()
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             prompt = f"""
             영상 속 스타일을 분석해서 패션 리포트를 작성해줘. 대상은 반드시 '{gender}'이야.
             마지막 줄에 반드시 이 형식을 지켜서 서로 다른 4개 아이템을 뽑아줘:
