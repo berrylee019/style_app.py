@@ -66,7 +66,7 @@ if uploaded_file:
         with st.spinner("AI 스타일리스트가 분석 중입니다..."):
             try:
                 video_data = uploaded_file.read()
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 # 4개의 개별 아이템을 명확히 뽑도록 유도
                 prompt = f"""
