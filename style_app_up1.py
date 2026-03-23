@@ -64,7 +64,7 @@ if uploaded_file:
             try:
                 video_data = uploaded_file.read()
                 # 최신 Gemini 1.5 Flash 사용 (영상 분석 최적화)
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 prompt = f"""
                 영상 속 인물의 패션 스타일을 분석해서 전문가 리포트를 작성해줘.
