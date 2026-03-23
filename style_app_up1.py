@@ -143,4 +143,4 @@ if st.session_state.get('products_done'):
                     st.link_button("🔥 쿠팡 최저가 확인", affiliate_url, use_container_width=True, type="primary")
     
     st.markdown("---")
-    st.caption(f"※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다. (ID: {COUPANG_AF_ID})")
+    st.caption(f"※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.")
