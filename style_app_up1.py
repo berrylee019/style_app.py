@@ -66,7 +66,7 @@ if uploaded_file:
         with st.spinner(f"AI가 {gender} 스타일 분석 중..."):
             try:
                 video_data = uploaded_file.read()
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 # 4개의 서로 다른 아이템을 명확히 리스트화 하도록 지시
                 prompt = f"""
