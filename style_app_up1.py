@@ -89,4 +89,4 @@ if st.session_state.get('analysis_done'):
                     # [핵심] 모든 클릭은 형님의 인포크링크로!
                     st.link_button("🔥 최저가 혜택받기", MY_REVENUE_LINK, type="primary")
 
-st.success(f"형님, 가이드 영상을 통해 신뢰도를 높이고 모든 버튼을 {MY_REVENUE_LINK}로 고정했습니다!")
+st.success(f"가이드 영상을 보시고 오른쪽 버튼을 통해 본인의 10초 영상을 올리시면 AI가 분석을 시작합니!")
