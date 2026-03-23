@@ -62,7 +62,7 @@ if uploaded_file:
         with st.spinner(f"AI가 {gender} 스타일 분석 중..."):
             try:
                 video_data = uploaded_file.read()
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 prompt = f"""
                 영상 속 인물의 스타일을 분석해서 패션 리포트를 작성해줘.
