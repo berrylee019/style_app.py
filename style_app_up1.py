@@ -66,7 +66,7 @@ if uploaded_file:
         with st.spinner(f"베테랑 스타일리스트가 {gender} 패션을 분석 중..."):
             try:
                 video_data = uploaded_file.read()
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 prompt = f"""
                 너는 15년 경력의 베테랑 패션 스타일리스트야.
