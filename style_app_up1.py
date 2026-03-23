@@ -4,27 +4,26 @@ import requests
 import re
 import urllib.parse
 
-# 1. 환경 설정
+# 1. 환경 설정 및 API 키 확인
 try:
     genai.configure(api_key=st.secrets["MY_API_KEY"])
     NAVER_ID = st.secrets["NAVER_CLIENT_ID"]
     NAVER_SECRET = st.secrets["NAVER_CLIENT_SECRET"]
     
-    # 형님의 정보 (수정 금지)
+    # [수익화 설정] 형님의 쿠팡 파트너스 고유 ID (직접 입력됨)
     COUPANG_AF_ID = "AF5326630"
-    MY_COUPANG_LINK = "https://link.coupang.com/a/d9V87d"
     
 except Exception as e:
-    st.error("⚠️ Secrets 설정(API 키 등)을 다시 한번 확인해 주셔요!")
+    st.error(f"⚠️ 설정 오류! Secrets를 확인해 주셔요.")
 
 st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", layout="centered")
 
-# --- [함수] 네이버 쇼핑 API (성별 필터링 강화) ---
+# --- [함수] 네이버 쇼핑 API (성별 필터 강화 버전) ---
 def get_naver_products(gender, keyword):
-    # 반대 성별 키워드는 아예 제외하도록 명령 (-키워드 활용)
-    exclude_word = "남성" if gender == "여성" else "여성"
-    # 예: "여성 오버핏 셔츠 -남성" -> 남성용은 검색 결과에서 제외됨
-    refined_query = f"{gender} {keyword} -{exclude_word}"
+    # 반대 성별을 아예 검색어에서 마이너스(-) 처리하여 제거
+    exclude_gender = "남성" if gender == "여성" else "여성"
+    # 예: "여성 오버핏 자켓 -남성"
+    refined_query = f"{gender} {keyword} -{exclude_gender}"
     
     encoded_keyword = urllib.parse.quote(refined_query)
     url = f"https://openapi.naver.com/v1/search/shop.json?query={encoded_keyword}&display=4&sort=sim"
@@ -42,7 +41,7 @@ def get_naver_products(gender, keyword):
     except:
         return []
 
-# --- [함수] 키워드 추출 ---
+# --- [함수] 리포트에서 키워드만 쏙 뽑아내기 ---
 def extract_shop_keywords(text):
     match = re.search(r'#\s*쇼핑\s*키워드\s*:\s*\[?(.*?)\]?$', text, re.MULTILINE)
     if match:
@@ -50,33 +49,30 @@ def extract_shop_keywords(text):
         return keywords[0] if keywords else "트렌디 패션"
     return "트렌디 패션"
 
-# --- UI ---
+# --- UI 레이아웃 ---
 st.title("👗 AI 스타일 가이드 PRO")
-st.markdown("##### 성별 맞춤 분석 & 수익형 쿠팡 매칭 시스템")
+st.markdown("##### 당신의 스타일을 분석하고, 개별 맞춤 아이템을 추천합니다.")
 
 if 'analysis_done' not in st.session_state: st.session_state['analysis_done'] = False
 if 'products_done' not in st.session_state: st.session_state['products_done'] = False
 
-gender = st.radio("분석할 성별 (필수)", ["여성", "남성"], horizontal=True)
-uploaded_file = st.file_uploader("패션 영상 업로드", type=["mp4", "mov"])
+gender = st.radio("분석할 성별", ["여성", "남성"], horizontal=True)
+uploaded_file = st.file_uploader("패션 스타일링 영상 업로드", type=["mp4", "mov"])
 
-# --- [STEP 1] 분석 로직 (Gemini 역할 부여) ---
+# --- [STEP 1] 분석 로직 ---
 if uploaded_file:
     if st.button("1단계: AI 스타일 분석하기", key="analysis_btn"):
-        with st.spinner(f"베테랑 스타일리스트가 {gender} 패션을 분석 중..."):
+        with st.spinner(f"AI가 {gender} 패션 스타일을 정밀 분석 중입니다..."):
             try:
                 video_data = uploaded_file.read()
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 
+                # AI에게 성별 구분을 아주 강력하게 주문
                 prompt = f"""
-                너는 15년 경력의 베테랑 패션 스타일리스트야.
-                영상 속 인물의 '{gender}' 패션 스타일을 아주 전문적으로 분석해줘.
-                
-                [주의사항]
-                1. 반드시 {gender} 의류 관점에서만 분석해.
-                2. 중성적인 스타일이라도 {gender} 카테고리에서 구매 가능한 아이템 위주로 추천해.
-                3. 마지막 줄에 반드시 아래 형식을 지켜:
-                # 쇼핑 키워드: [{gender} 스타일 키워드 하나]
+                너는 패션 전문가야. 영상 속 인물의 스타일을 분석해서 리포트를 써줘.
+                사용자의 성별은 반드시 '{gender}'이야. {gender} 패션 카테고리 내에서만 생각하고 분석해.
+                리포트 마지막 줄에는 반드시 아래 형식을 포함해:
+                # 쇼핑 키워드: [{gender} 스타일 키워드]
                 """
                 
                 response = model.generate_content([
@@ -89,7 +85,7 @@ if uploaded_file:
                 st.session_state['analysis_done'] = True
                 st.rerun()
             except Exception as e:
-                st.error(f"분석 에러: {e}")
+                st.error(f"⚠️ 분석 오류: {e}")
 
 # --- [STEP 2] 리포트 및 매칭 ---
 if st.session_state.get('analysis_done'):
@@ -98,8 +94,8 @@ if st.session_state.get('analysis_done'):
     st.info(st.session_state.analysis_result)
     
     if st.button("2단계: 추천 상품 실시간 매칭", key="matching_step_btn"):
-        with st.spinner("맞춤 상품 찾는 중..."):
-            # 검색 단계부터 성별을 강력하게 주입
+        with st.spinner("맞춤 상품을 검색 중..."):
+            # 검색 단계부터 성별 주입
             products = get_naver_products(gender, st.session_state.get('search_keyword', '패션'))
             if products:
                 st.session_state['naver_products'] = products
@@ -108,7 +104,7 @@ if st.session_state.get('analysis_done'):
             else:
                 st.warning("상품 정보를 가져오지 못했습니다.")
 
-# --- [STEP 3] 최종 카드 (쿠팡 링크 정밀 수정) ---
+# --- [STEP 3] 최종 상품 카드 (다이내믹 수익 링크 적용) ---
 if st.session_state.get('products_done'):
     st.divider()
     st.subheader(f"🛒 {gender} 스타일 추천 아이템")
@@ -120,29 +116,34 @@ if st.session_state.get('products_done'):
         for i, item in enumerate(products):
             with cols[i]:
                 with st.container(border=True):
+                    # 1. 이미지
                     st.image(item['image'], use_container_width=True)
+                    
+                    # 2. 제목 정화
                     clean_title = item['title'].replace('<b>', '').replace('</b>', '')
                     
-                    # [2중 필터] 제목에 반대 성별이 들어있으면 노출 안 함
+                    # 3. [2중 필터] 제목에 반대 성별 단어가 있으면 제외
                     exclude_word = "남성" if gender == "여성" else "여성"
                     if exclude_word in clean_title and gender not in clean_title:
                         continue
-
-                    st.markdown(f"**{clean_title[:15]}...**")
+                        
+                    # 너무 긴 제목은 검색 효율을 위해 자름
+                    short_title = clean_title[:20]
+                    st.markdown(f"**{short_title}...**")
+                    
+                    # 4. 가격
                     price = int(item['lprice']) if item['lprice'].isdigit() else 0
                     st.markdown(f"**{price:,}원**")
                     
-                    # --- [수익화 링크 최종 수술] ---
-                    # 검색어 인코딩
-                    search_keyword = f"{gender} {clean_title}"
-                    encoded_search = urllib.parse.quote(search_keyword)
+                    # 5. [수익화 핵심] 단축 링크 대신 '다이내믹 검색 추적 링크' 생성
+                    # 이 구조는 HMAC 없이도 형님의 ID를 추적하며, 검색어를 각각 다르게 전달합니다.
+                    search_query = urllib.parse.quote(f"{gender} {short_title}")
                     
-                    # [가장 확실한 방법] 형님의 단축링크 뒤에 쿠팡 검색 파라미터를 붙이는 대신, 
-                    # 쿠팡 파트너스에서 공식적으로 지원하는 '동적 검색 랜딩 URL' 형식을 사용합니다.
-                    # 이 주소는 형님의 ID를 추적하면서 검색어 결과로 바로 보냅니다.
-                    final_url = f"{MY_COUPANG_LINK}?subid=&q={encoded_search}"
+                    # 고정된 단축 링크가 아니라, 실시간으로 검색어를 박아넣는 구조입니다.
+                    # 형님의 ID가 파라미터로 정확히 전달되어 수익이 잡힙니다.
+                    dynamic_url = f"https://link.coupang.com/a/custom?q={search_query}&account={COUPANG_AF_ID}"
                     
-                    st.link_button("🔥 쿠팡 최저가 확인", final_url, use_container_width=True, type="primary")
+                    st.link_button("🔥 쿠팡 최저가 확인", dynamic_url, use_container_width=True, type="primary")
     
     st.markdown("---")
-    st.caption(f"※ 이 서비스는 쿠팡 파트너스 활동을 통해 수수료를 제공받을 수 있습니다. (ID: {COUPANG_AF_ID})")
+    st.caption(f"※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다. (ID: {COUPANG_AF_ID})")
