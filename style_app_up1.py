@@ -75,7 +75,7 @@ with col_upload:
     
     if uploaded_file:
         if st.button("🚀 스타일 분석 시작", use_container_width=True, type="primary"):
-            with st.spinner("잠시만 기다려주쇼! AI가 분석 중입니다..."):
+            with st.spinner("잠시만 기다려주십시요! AI가 분석 중입니다..."):
                 try:
                     video_data = uploaded_file.read()
                     model = genai.GenerativeModel('gemini-2.5-flash')
