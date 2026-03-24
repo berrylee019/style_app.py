@@ -75,7 +75,7 @@ with col_upload:
     
     if uploaded_file:
         if st.button("🚀 스타일 분석 시작", use_container_width=True, type="primary"):
-            with st.spinner("형님, 잠시만 기다려주쇼! AI가 눈을 크게 뜨고 분석 중입니다..."):
+            with st.spinner("잠시만 기다려주쇼! AI가 분석 중입니다..."):
                 try:
                     video_data = uploaded_file.read()
                     model = genai.GenerativeModel('gemini-2.5-flash')
@@ -125,4 +125,4 @@ if st.session_state.stage == 'shopping':
                     # 모든 버튼은 형님의 인포크링크로 고정
                     st.link_button("🔥 최저가 혜택받기", MY_REVENUE_LINK, use_container_width=True, type="primary")
     
-    st.success("형님, 분석과 추천이 모두 완료되었습니다! 추가 분석을 원하시면 영상을 다시 올려주세요.")
+    st.success("분석과 추천이 모두 완료되었습니다! 의뢰인의 체형을 보완해줄 핵심 아이템 입니다.  추가 분석을 원하시면 영상을 다시 올려주세요.")
