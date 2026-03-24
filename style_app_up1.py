@@ -16,20 +16,29 @@ except:
 
 st.set_page_config(page_title="AI 스타일 가이드 PRO", page_icon="👗", layout="wide")
 
+# 세션 상태 초기화 (단계 제어용)
+if 'stage' not in st.session_state:
+    st.session_state.stage = 'ready' # ready -> analyzed -> shopping
+if 'analysis_text' not in st.session_state:
+    st.session_state.analysis_text = ""
+if 'products' not in st.session_state:
+    st.session_state.products = []
+
 # 2. 비주얼 커스텀 스타일링
 st.markdown("""
 <style>
-    .main-title { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 2.5rem; }
-    .sub-title { color: #6B7280; text-align: center; margin-bottom: 30px; }
-    .guide-box { background-color: #EFF6FF; border-radius: 15px; padding: 20px; border: 1px solid #BFDBFE; }
-    .stButton>button { width: 100%; border-radius: 10px; font-weight: bold; height: 3rem; background-color: #2563EB !important; }
+    .main-title { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 2.2rem; }
+    .point-text { color: #2563EB; font-weight: 600; text-align: center; }
+    .guide-card { background-color: white; padding: 15px; border-radius: 12px; border-left: 5px solid #2563EB; margin-bottom: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.05); }
+    .stButton>button { border-radius: 10px; font-weight: bold; height: 3rem; }
+    .analysis-result { background-color: #F0F7FF; padding: 25px; border-radius: 15px; border: 1px solid #BFDBFE; line-height: 1.8; font-size: 1.1rem; }
 </style>
 """, unsafe_allow_html=True)
 
 # --- [함수] 네이버 쇼핑 API (성별 정밀 필터) ---
 def get_gender_item(gender, keyword):
     exclude = "남성" if gender == "여성" else "여성"
-    refined_query = f"{gender} {keyword} -{exclude} -공용"
+    refined_query = f"{gender}용 {keyword} -{exclude} -공용"
     encoded_query = urllib.parse.quote(refined_query)
     url = f"https://openapi.naver.com/v1/search/shop.json?query={encoded_query}&display=1&sort=sim"
     headers = {"X-Naver-Client-Id": NAVER_ID, "X-Naver-Client-Secret": NAVER_SECRET}
@@ -40,44 +49,71 @@ def get_gender_item(gender, keyword):
 
 # --- UI 레이아웃 ---
 st.markdown("<h1 class='main-title'>👗 AI 스타일 가이드 PRO</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>당신의 영상 10초로 완성하는 완벽한 퍼스널 스타일링</p>", unsafe_allow_html=True)
+st.markdown("<p class='point-text'>실시간 비디오 분석으로 완성하는 당신만의 퍼스널 룩</p>", unsafe_allow_html=True)
 
-# [상단 섹션] 가이드 영상 및 업로드
-col1, col2 = st.columns([1.2, 1])
+# [상단 섹션] 촬영 가이드 및 업로드
+st.divider()
+col_guide, col_upload = st.columns([1.3, 1])
 
-with col1:
-    st.markdown("### 📽️ 촬영 가이드 (필독!)")
-    # 형님이 주신 유튜브 쇼츠 링크를 임베드합니다.
-    st.video("https://www.youtube.com/watch?v=1vE5QSvW_Vg")
-    st.markdown("""
-    <div class='guide-box'>
-    ✅ <b>전신 샷 필수:</b> 머리부터 발끝까지 화면에 꽉 차게!<br>
-    ✅ <b>360도 회전:</b> 천천히 한 바퀴 돌아주시면 분석이 정확해요.<br>
-    ✅ <b>밝은 조명:</b> 조명이 밝아야 실제 컬러를 잘 잡습니다.
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown("### 🎬 영상 업로드 및 분석")
-    gender = st.radio("분석할 성별을 선택하세요", ["여성", "남성"], horizontal=True)
-    uploaded_file = st.file_uploader("분석할 영상을 올려주세요 (MP4, MOV)", type=["mp4", "mov"])
+with col_guide:
+    st.markdown("### 📽️ 촬영 가이드 및 업로드")
+    st.video("https://www.youtube.com/watch?v=1vE5QSvW_Vg") # 형님의 유튜브 가이드 영상
     
-    if uploaded_file and st.button("🚀 스타일 분석 시작"):
-        with st.spinner("AI가 영상을 분석하고 최적의 아이템을 매칭 중입니다..."):
-            # Gemini 영상 분석 로직 (중략 - 이전 코드와 동일)
-            # ... 분석 후 키워드 4개 추출 ...
-            keywords = ["자켓", "팬츠", "슈즈", "액세서리"] # 예시 키워드
-            
-            st.session_state['analysis_done'] = True
-            st.session_state['items'] = [get_gender_item(gender, k) for k in keywords]
+    # 4가지 수칙 레이아웃
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("<div class='guide-card'>👤 <b>1. 전신 샷 필수</b><br>머리부터 발끝까지 다 들어와야 해요.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='guide-card'>🔄 <b>2. 360도 회전</b><br>천천히 한 바퀴 돌면 입체 분석이 가능합니다.</div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown("<div class='guide-card'>💡 <b>3. 밝은 조명</b><br>조명이 밝아야 컬러를 정확히 잡아내요.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='guide-card'>⏱️ <b>4. 5~15초 권장</b><br>너무 길면 업로드가 느려질 수 있어요.</div>", unsafe_allow_html=True)
 
-# [하단 섹션] 분석 결과 및 수익 아이템 전시
-if st.session_state.get('analysis_done'):
+with col_upload:
+    st.markdown("### 🎬 영상을 업로드하세요")
+    gender = st.radio("분석 성별", ["여성", "남성"], horizontal=True)
+    uploaded_file = st.file_uploader("", type=["mp4", "mov"])
+    
+    if uploaded_file:
+        if st.button("🚀 스타일 분석 시작", use_container_width=True, type="primary"):
+            with st.spinner("형님, 잠시만 기다려주쇼! AI가 눈을 크게 뜨고 분석 중입니다..."):
+                try:
+                    video_data = uploaded_file.read()
+                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    prompt = f"영상 속 인물의 스타일을 '{gender}' 기준으로 정밀 분석하고 패션 리포트를 작성해줘. 마지막엔 반드시 # 쇼핑 키워드: [{gender} 상의, {gender} 하의, {gender} 신발, {gender} 잡화] 형식을 포함해줘."
+                    response = model.generate_content([prompt, {"mime_type": "video/mp4", "data": video_data}])
+                    
+                    # 데이터 저장 및 단계 변경
+                    st.session_state.analysis_text = response.text
+                    keywords = re.search(r'#\s*쇼핑\s*키워드\s*:\s*\[(.*?)\]', response.text)
+                    if keywords:
+                        k_list = [k.strip() for k in keywords.group(1).split(',')]
+                        st.session_state.products = [get_gender_item(gender, k) for k in k_list[:4]]
+                    
+                    st.session_state.stage = 'analyzed'
+                except Exception as e:
+                    st.error(f"분석 중 오류가 발생했습니다: {e}")
+
+# --- [단계별 출력 제어] ---
+
+# 1단계: 분석 결과 리포트 보여주기
+if st.session_state.stage in ['analyzed', 'shopping']:
     st.divider()
-    st.subheader(f"🛒 AI 추천 {gender} 스타일링 아이템")
-    cols = st.columns(4)
+    st.subheader("📊 AI 스타일 정밀 분석 리포트")
+    st.markdown(f"<div class='analysis-result'>{st.session_state.analysis_text}</div>", unsafe_allow_html=True)
     
-    for i, item in enumerate(st.session_state['items']):
+    # 분석 내용을 다 읽은 후에만 버튼이 나타남
+    if st.session_state.stage == 'analyzed':
+        st.write("")
+        if st.button("✨ 내 체형에 맞는 추천 상품 확인하기", use_container_width=True):
+            st.session_state.stage = 'shopping'
+            st.rerun()
+
+# 2단계: 추천 상품 리스트 보여주기
+if st.session_state.stage == 'shopping':
+    st.divider()
+    st.subheader(f"🛒 추천 {gender} 아이템 4선")
+    cols = st.columns(4)
+    for i, item in enumerate(st.session_state.products):
         if item:
             with cols[i]:
                 with st.container(border=True):
@@ -86,7 +122,7 @@ if st.session_state.get('analysis_done'):
                     st.markdown(f"**{title[:15]}...**")
                     st.markdown(f"**{int(item['lprice']):,}원**")
                     
-                    # [핵심] 모든 클릭은 형님의 인포크링크로!
-                    st.link_button("🔥 최저가 혜택받기", MY_REVENUE_LINK, type="primary")
-
-st.success(f"가이드 영상을 보시고 오른쪽 버튼을 통해 본인의 10초 영상을 올리시면 AI가 스타일 분석을 시작하게 됩니다!")
+                    # 모든 버튼은 형님의 인포크링크로 고정
+                    st.link_button("🔥 최저가 혜택받기", MY_REVENUE_LINK, use_container_width=True, type="primary")
+    
+    st.success("형님, 분석과 추천이 모두 완료되었습니다! 추가 분석을 원하시면 영상을 다시 올려주세요.")
