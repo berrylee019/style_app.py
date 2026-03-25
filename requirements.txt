@@ -10,3 +10,6 @@ google-auth
 openai
 replicate
 pydantic<2.0
+opencv-python-headless
+mediapipe
+numpy
