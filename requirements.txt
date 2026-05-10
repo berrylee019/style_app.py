@@ -10,3 +10,5 @@ google-auth
 openai
 replicate
 pydantic<2.0
+st-gsheets-connection
+pandas
