@@ -151,16 +151,20 @@ def add_poc_registration_form():
             
             submitted = st.form_submit_button("마지막 슬롯 선점 및 PoC 등록하기")
             
-            # 수정된 데이터 처리 부분
+
             if submitted:
                 if brand_name and manager_name and contact_info:
                     try:
-                        # 1. 데이터 읽기 시도 (데이터가 없으면 에러가 날 수 있으므로 예외처리)
+                        # 1. 시트 연결 (캐시 무시)
+                        # worksheet 이름을 "Sheet1" 대신 형님의 실제 시트 탭 이름으로 확인하세요.
+                        # 만약 한글로 되어 있다면 "시트1"로 적어야 합니다.
+                        sheet_name = "style_app" # <- 여기를 실제 구글 시트 하단 탭 이름과 맞추세요!
+                        
                         try:
-                            existing_data = conn.read(worksheet="style_app")
-                        except:
-                            # 데이터가 아예 없는 초기 상태라면 헤더만 있는 데이터프레임 생성
-                            existing_data = pd.DataFrame(columns=["Timestamp", "Brand", "Manager", "Platform", "Contact", "Goals", "Message"])
+                            existing_data = conn.read(worksheet=sheet_name)
+                        except Exception:
+                            # 만약 Sheet1이 없어서 에러나면 첫 번째 탭을 그냥 가져오도록 시도
+                            existing_data = conn.read() 
                         
                         # 2. 새 데이터 생성
                         new_entry = pd.DataFrame([{
@@ -173,17 +177,22 @@ def add_poc_registration_form():
                             "Message": message
                         }])
                         
-                        # 3. 병합 및 업데이트 (clear_cache=True 추가)
-                        updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
-                        conn.update(worksheet="style_app", data=updated_df)
+                        # 3. 데이터 병합 (기존 데이터가 비어있을 경우 예외처리)
+                        if existing_data is not None and not existing_data.empty:
+                            updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
+                        else:
+                            updated_df = new_entry
+                            
+                        # 4. 시트 업데이트
+                        conn.update(worksheet=sheet_name, data=updated_df)
                         
-                        st.success(f"✅ 신청 완료! {brand_name} 담당자님, 등록되었습니다.")
+                        st.success(f"✅ 신청이 완료되었습니다! {brand_name} {manager_name}님께 곧 연락드리겠습니다.")
                         st.balloons()
                     except Exception as e:
-                        st.error(f"시트 업데이트 중 오류 발생: {e}")
+                        # 에러 메시지를 더 구체적으로 출력해서 원인을 파악합니다.
+                        st.error(f"📍 시트 업데이트 상세 오류: {e}")
                 else:
                     st.warning("⚠️ 필수 항목(*)을 모두 입력해 주세요.")
-
     st.info("💡 PoC 비용(₩99,000)은 담당자 확인 후 발송되는 연동 가이드 내 결제 링크를 통해 결제됩니다.")
 
 add_poc_registration_form()
