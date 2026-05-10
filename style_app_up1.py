@@ -126,11 +126,12 @@ def add_poc_registration_form():
     st.header("💼 Business Edition (Enterprise Only)")
     st.error("🔥 **현재 도입 가능한 슬롯이 단 1개 남았습니다.** (상위 브랜드 4곳 도입 확정)")
 
-    # 구글 시트 연결
+    # 1. 구글 시트 연결 (직접 연결)
     try:
+        # secrets에 설정된 [connections.gsheets] 설정을 자동으로 가져옵니다.
         conn = st.connection("gsheets", type=GSheetsConnection)
-    except:
-        st.warning("⚠️ 구글 시트 연결 설정이 필요합니다.")
+    except Exception as e:
+        st.warning(f"⚠️ 구글 시트 연결 설정 확인 필요: {e}")
         return
 
     with st.container():
@@ -151,22 +152,17 @@ def add_poc_registration_form():
             
             submitted = st.form_submit_button("마지막 슬롯 선점 및 PoC 등록하기")
             
-
             if submitted:
                 if brand_name and manager_name and contact_info:
                     try:
-                        # 1. 시트 연결 (캐시 무시)
-                        # worksheet 이름을 "Sheet1" 대신 형님의 실제 시트 탭 이름으로 확인하세요.
-                        # 만약 한글로 되어 있다면 "시트1"로 적어야 합니다.
-                        sheet_name = "style_app" # <- 여기를 실제 구글 시트 하단 탭 이름과 맞추세요!
-                        
+                        # 2. 데이터 읽기 (워크시트 이름을 지정하지 않고 첫 번째 시트를 기본으로 함)
+                        # 만약 특정 탭을 지정하고 싶다면 worksheet="Sheet1" 추가
                         try:
-                            existing_data = conn.read(worksheet=style_app)
-                        except Exception:
-                            # 만약 Sheet1이 없어서 에러나면 첫 번째 탭을 그냥 가져오도록 시도
-                            existing_data = conn.read() 
+                            existing_data = conn.read()
+                        except:
+                            existing_data = pd.DataFrame()
                         
-                        # 2. 새 데이터 생성
+                        # 3. 새 데이터 행 생성
                         new_entry = pd.DataFrame([{
                             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "Brand": brand_name,
@@ -177,22 +173,20 @@ def add_poc_registration_form():
                             "Message": message
                         }])
                         
-                        # 3. 데이터 병합 (기존 데이터가 비어있을 경우 예외처리)
+                        # 4. 데이터 병합 및 업데이트
                         if existing_data is not None and not existing_data.empty:
                             updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
                         else:
                             updated_df = new_entry
                             
-                        # 4. 시트 업데이트
-                        conn.update(worksheet=style_app, data=updated_df)
+                        # 시트 업데이트 실행
+                        conn.update(data=updated_df)
                         
                         st.success(f"✅ 신청이 완료되었습니다! {brand_name} {manager_name}님께 곧 연락드리겠습니다.")
                         st.balloons()
                     except Exception as e:
-                        # 에러 메시지를 더 구체적으로 출력해서 원인을 파악합니다.
                         st.error(f"📍 시트 업데이트 상세 오류: {e}")
                 else:
                     st.warning("⚠️ 필수 항목(*)을 모두 입력해 주세요.")
-    st.info("💡 PoC 비용(₩99,000)은 담당자 확인 후 발송되는 연동 가이드 내 결제 링크를 통해 결제됩니다.")
 
-add_poc_registration_form()
+    st.info("💡 PoC 비용(₩99,000)은 담당자 확인 후 발송되는 연동 가이드 내 결제 링크를 통해 결제됩니다.")
