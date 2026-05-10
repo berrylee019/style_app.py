@@ -159,3 +159,53 @@ def add_business_section():
     st.info("💡 PoC 신청 시 담당자가 24시간 이내에 연동 가이드를 발송해 드립니다.")
 
 add_business_section()
+
+
+def add_poc_registration_form():
+    st.markdown("---")
+    st.header("💼 Business Edition (Enterprise Only)")
+    
+    # 긴박감 조성 배너
+    st.error("🔥 **현재 도입 가능한 슬롯이 단 1개 남았습니다.** (상위 브랜드 4곳 도입 확정)")
+
+    # PoC 신청 폼 섹션
+    with st.container():
+        st.subheader("Early Bird PoC 마지막 슬롯 신청")
+        st.write("아래 정보를 입력해 주시면 담당자가 24시간 이내에 연동 가이드를 발송해 드립니다.")
+        
+        # 폼 시작
+        with st.form("poc_form", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                brand_name = st.text_input("브랜드명 / 회사명*", placeholder="예: 무신사, 스타일스캔")
+                manager_name = st.text_input("담당자 성함 및 직함*", placeholder="예: 홍길동 팀장")
+            
+            with col2:
+                platform = st.selectbox("현재 운영 중인 플랫폼*", 
+                                     ["카페24", "메이크샵", "자사 구축", "기타 플랫폼"])
+                contact_info = st.text_input("연락처 / 이메일*", placeholder="example@brand.com")
+            
+            goal = st.multiselect("가장 고민되는 지표 (중복 선택 가능)", 
+                               ["반품률 감소", "구매 전환율 상승", "신규 AI 기술 도입", "퍼스널 컬러 데이터 확보"])
+            
+            message = st.text_area("기타 문의사항", placeholder="추가로 궁금하신 점을 적어주세요.")
+            
+            # 제출 버튼
+            submitted = st.form_submit_button("마지막 슬롯 선점 및 PoC 등록하기")
+            
+            if submitted:
+                if brand_name and manager_name and contact_info:
+                    # 1. 데이터 저장 로직 (여기에 구글 시트 연동이나 이메일 발송 코드 추가 가능)
+                    # 현재는 화면에 성공 메시지만 띄움
+                    st.success(f"✅ 신청이 완료되었습니다! {brand_name} {manager_name}님께 곧 연락드리겠습니다.")
+                    st.balloons()
+                    
+                    # 팁: 형님 이메일로 알림이 오게 하려면 'st.write' 대신 외부 API를 연동하면 됩니다.
+                else:
+                    st.warning("⚠️ 필수 항목(*)을 모두 입력해 주세요.")
+
+    # 추가 안내
+    st.info("💡 PoC 비용(₩99,000)은 담당자 확인 후 발송되는 연동 가이드 내 결제 링크를 통해 결제됩니다.")
+
+add_poc_registration_form()
