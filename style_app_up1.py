@@ -144,7 +144,7 @@ def add_business_section():
         st.write("2주간의 기술 검증 및 반품률 감소 리포트 제공")
         # 버튼 클릭 시 구글 폼으로 연결
         st.link_button("마지막 슬롯 선점하기 (₩99,000)", 
-                       "https://docs.google.com/forms/d/e/style_app/viewform")
+                       "https://docs.google.com/spreadsheets/d/1beDxNIxoDtj7d151FSrDETLn-uOtA8CNHd5tMi2sglo/edit?gid=0#gid=0")
 
     with col2:
         st.subheader("Standard SaaS")
