@@ -162,7 +162,7 @@ def add_business_section():
         - 전용 모델 파인튜닝
         - 브랜드 맞춤 UI/UX
         """)
-        st.link_button("담당자 직통 문의", "mailto:형님메일주소@example.com")
+        st.link_button("담당자 직통 문의", "mailto:bslee@example.com")
 
     st.warning("⚠️ 현재 상위 5개 브랜드 한정으로 우선 도입 혜택을 드리고 있습니다.")
 
