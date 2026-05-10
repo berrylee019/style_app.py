@@ -175,7 +175,7 @@ def add_poc_registration_form():
                         
                         # 3. 병합 및 업데이트 (clear_cache=True 추가)
                         updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
-                        conn.update(worksheet="Sheet1", data=updated_df)
+                        conn.update(worksheet="style_app", data=updated_df)
                         
                         st.success(f"✅ 신청 완료! {brand_name} 담당자님, 등록되었습니다.")
                         st.balloons()
