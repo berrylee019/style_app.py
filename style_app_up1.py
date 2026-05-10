@@ -144,7 +144,7 @@ def add_business_section():
         if st.button("PoC 시작하기 (₩99,000)"):
             st.info("결제 페이지로 이동합니다... (토스페이먼츠/아임포트 연동)")
             # 여기에 결제 링크 연결 (예: Toss, Buy Me a Coffee 등)
-            # webbrowser.open("형님의_결제_링크")
+            # webbrowser.open("https://style-scan-vip1.streamlit.app/#business-edition")
 
     with col2:
         st.subheader("Standard SaaS")
