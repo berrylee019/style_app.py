@@ -126,3 +126,44 @@ if st.session_state.stage == 'shopping':
                     st.link_button("🔥 최저가 혜택받기", MY_REVENUE_LINK, use_container_width=True, type="primary")
     
     st.success("분석과 추천이 모두 완료되었습니다! 의뢰인의 체형을 보완해줄 핵심 아이템 입니다.  추가 분석을 원하시면 영상을 다시 올려주세요.")
+
+
+def add_business_section():
+    st.markdown("---")
+    st.header("💼 Business Edition (Enterprise Only)")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.subheader("Early Bird PoC")
+        st.markdown("""
+        - **2주간의 기술 검증**
+        - 자사몰 위젯 연동 지원
+        - 반품률 감소 리포트 제공
+        """)
+        if st.button("PoC 시작하기 (₩99,000)"):
+            st.info("결제 페이지로 이동합니다... (토스페이먼츠/아임포트 연동)")
+            # 여기에 결제 링크 연결 (예: Toss, Buy Me a Coffee 등)
+            # webbrowser.open("형님의_결제_링크")
+
+    with col2:
+        st.subheader("Standard SaaS")
+        st.markdown("""
+        - **월 구독형 엔진 이용**
+        - API 호출 무제한
+        - 실시간 날씨 데이터 연동
+        """)
+        st.button("상담 신청 (구독 문의)", disabled=True)
+
+    with col3:
+        st.subheader("Custom Engine")
+        st.markdown("""
+        - **독립 서버 구축**
+        - 전용 모델 파인튜닝
+        - 브랜드 맞춤 UI/UX
+        """)
+        st.link_button("담당자 직통 문의", "mailto:형님메일주소@example.com")
+
+    st.warning("⚠️ 현재 상위 5개 브랜드 한정으로 우선 도입 혜택을 드리고 있습니다.")
+
+add_business_section()
