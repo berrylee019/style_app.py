@@ -151,11 +151,18 @@ def add_poc_registration_form():
             
             submitted = st.form_submit_button("마지막 슬롯 선점 및 PoC 등록하기")
             
+            # 수정된 데이터 처리 부분
             if submitted:
                 if brand_name and manager_name and contact_info:
                     try:
-                        # 데이터 읽기 및 새 데이터 추가
-                        existing_data = conn.read(worksheet="style_app")
+                        # 1. 데이터 읽기 시도 (데이터가 없으면 에러가 날 수 있으므로 예외처리)
+                        try:
+                            existing_data = conn.read(worksheet="style_app")
+                        except:
+                            # 데이터가 아예 없는 초기 상태라면 헤더만 있는 데이터프레임 생성
+                            existing_data = pd.DataFrame(columns=["Timestamp", "Brand", "Manager", "Platform", "Contact", "Goals", "Message"])
+                        
+                        # 2. 새 데이터 생성
                         new_entry = pd.DataFrame([{
                             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "Brand": brand_name,
@@ -165,10 +172,12 @@ def add_poc_registration_form():
                             "Goals": ", ".join(goal),
                             "Message": message
                         }])
-                        updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
-                        conn.update(worksheet="style_app", data=updated_df)
                         
-                        st.success(f"✅ 신청이 완료되었습니다! {brand_name} {manager_name}님께 곧 연락드리겠습니다.")
+                        # 3. 병합 및 업데이트 (clear_cache=True 추가)
+                        updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
+                        conn.update(worksheet="Sheet1", data=updated_df)
+                        
+                        st.success(f"✅ 신청 완료! {brand_name} 담당자님, 등록되었습니다.")
                         st.balloons()
                     except Exception as e:
                         st.error(f"시트 업데이트 중 오류 발생: {e}")
