@@ -190,3 +190,4 @@ def add_poc_registration_form():
                     st.warning("⚠️ 필수 항목(*)을 모두 입력해 주세요.")
 
     st.info("💡 PoC 비용(₩99,000)은 담당자 확인 후 발송되는 연동 가이드 내 결제 링크를 통해 결제됩니다.")
+add_poc_registration_form()
