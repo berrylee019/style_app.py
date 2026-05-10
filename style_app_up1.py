@@ -161,7 +161,7 @@ def add_poc_registration_form():
                         sheet_name = "style_app" # <- 여기를 실제 구글 시트 하단 탭 이름과 맞추세요!
                         
                         try:
-                            existing_data = conn.read(worksheet=sheet_name)
+                            existing_data = conn.read(worksheet=style_app)
                         except Exception:
                             # 만약 Sheet1이 없어서 에러나면 첫 번째 탭을 그냥 가져오도록 시도
                             existing_data = conn.read() 
@@ -184,7 +184,7 @@ def add_poc_registration_form():
                             updated_df = new_entry
                             
                         # 4. 시트 업데이트
-                        conn.update(worksheet=sheet_name, data=updated_df)
+                        conn.update(worksheet=style_app, data=updated_df)
                         
                         st.success(f"✅ 신청이 완료되었습니다! {brand_name} {manager_name}님께 곧 연락드리겠습니다.")
                         st.balloons()
