@@ -187,6 +187,7 @@ def create_recipe_pdf(content):
 # --- [4. 초기 설정] ---
 if 'chef_result' not in st.session_state: st.session_state.chef_result = None
 if 'unlocked' not in st.session_state: st.session_state.unlocked = False
+if 'paid' not in st.session_state: st.session_state.paid = False # 결제 여부 추적용 추가!
 
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
 
@@ -296,10 +297,35 @@ if st.session_state.chef_result:
 
     # A. 일반 회원 모드
     if access_key == "style77":
-        with col1:
-            pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
-            st.download_button(label="📄 식단 리포트 PDF 저장", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
-        st.success("✅ 회원님, 오늘의 맞춤 리포트가 준비되었습니다!")
+        # 아직 결제하지 않은 경우 -> 결제 안내창 노출
+        if not st.session_state.paid:
+            st.markdown("""
+                <div style="background-color: #FEE500; color: #222222; padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #EAEAEA;">
+                    <h4 style="margin: 0 0 8px 0; font-weight: 800; font-size: 16px; display: flex; align-items: center;">
+                        📱 카카오페이 / 계좌 결제 후 다운로드
+                    </h4>
+                    <p style="font-size: 13.5px; margin: 0; line-height: 1.5; color: #333333;">
+                        본 식단 분석 리포트는 프리미엄 유료 서비스입니다.<br>
+                        <b>결제 금액 : 3,000원</b><br>
+                        아래 계좌 또는 카카오페이로 송금 후 결제 완료 버튼을 눌러주셔요!
+                    </p>
+                    <div style="background-color: #ffffff; padding: 10px; border-radius: 8px; margin-top: 12px; font-weight: bold; text-align: center; color: #111111; font-size: 14px; border: 1px solid #DDD;">
+                        카카오뱅크 3333-01-XXXXXXX (예금주: 스타일스캔)
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            with col1:
+                if st.button("✅ 결제 및 송금을 완료했습니다"):
+                    st.session_state.paid = True
+                    st.rerun()
+                    
+        # 결제가 완료된 경우 -> 실제 PDF 다운로드 버튼 노출
+        else:
+            with col1:
+                pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
+                st.download_button(label="📄 식단 리포트 PDF 저장", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
+            st.success("✅ 결제가 확인되었습니다! 회원님, 오늘의 맞춤 리포트를 다운로드 하셔요.")
 
     # B. 관리자(형님) 모드 (master77 입력 시)
     elif access_key == "master77":
