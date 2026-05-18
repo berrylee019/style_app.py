@@ -58,11 +58,16 @@ def save_to_google_sheet(ingredients, title, content):
         return False
 
 # --- [GitHub Issues 구독 예약자 연동 함수] ---
+# --- [GitHub Issues 구독 예약자 연동 함수] ---
 def save_to_github_issues(email):
     try:
+        # 스트림릿 Secrets에서는 토큰과 레포 이름만 가져옵니다.
         token = st.secrets["GITHUB_TOKEN"]
-        repo_owner = st.secrets["GITHUB_REPO_OWNER"]
         repo_name = st.secrets["GITHUB_REPO_NAME"]
+        
+        # 💡 형님의 깃허브 아이디(OWNER)를 여기에 직접 하드코딩해서 Secrets 누락 문제를 해결합니다!
+        # (만약 깃허브 아이디가 다른 거라면 아래 "leebs" 대신 진짜 아이디를 적어주셔요 형님!)
+        repo_owner = "leebs" 
         
         url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/issues"
         headers = {
