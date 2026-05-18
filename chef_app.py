@@ -265,7 +265,7 @@ if uploaded_img:
                 img_input = Image.open(io.BytesIO(image_bytes))
                 
                 # [안전장치 3] 가장 범용적이고 에러 없는 안정적인 모델명으로 세팅합니다.
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 # 수익형 블로그를 고려한 프롬프트
                 prompt = """사진 속 식재료를 분석해서 다음 양식으로 작성해줘:
