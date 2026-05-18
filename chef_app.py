@@ -310,7 +310,7 @@ if st.session_state.chef_result:
                         아래 계좌 또는 카카오페이로 송금 후 결제 완료 버튼을 눌러주셔요!
                     </p>
                     <div style="background-color: #ffffff; padding: 10px; border-radius: 8px; margin-top: 12px; font-weight: bold; text-align: center; color: #111111; font-size: 14px; border: 1px solid #DDD;">
-                        카카오뱅크 3333-01-XXXXXXX (예금주: 스타일스캔)
+                        카카오뱅크 3333-01-0447508 (예금주: 이병서)
                     </div>
                 </div>
             """, unsafe_allow_html=True)
