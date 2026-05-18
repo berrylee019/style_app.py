@@ -6,7 +6,7 @@ import re
 import requests
 from requests.auth import HTTPBasicAuth
 import streamlit.components.v1 as components
-import markdown # 상단에 추가
+import markdown  # 상단에 추가
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
@@ -26,7 +26,7 @@ def get_pending_recipes():
         pending = []
         for i, row in enumerate(all_records):
             if row.get('포스팅여부') == 'No':
-                row['row_idx'] = i + 2 # 헤더가 1번이라 데이터는 2번부터 시작!
+                row['row_idx'] = i + 2  # 헤더가 1번이라 데이터는 2번부터 시작!
                 pending.append(row)
         return pending, sheet
     except Exception as e:
@@ -60,7 +60,7 @@ def save_to_google_sheet(ingredients, title, content):
 # --- [메인 로직 내 호출 부분 - 레시피 생성 완료 직후에 배치!] ---
 # (이미지 분석 로직 안에서 response.text를 받은 직후)
 # if st.session_state.chef_result:
-#     save_to_google_sheet(str(img_part), "AI 추천 레시피", st.session_state.chef_result)
+#      save_to_google_sheet(str(img_part), "AI 추천 레시피", st.session_state.chef_result)
 
 # --- [1. 수익형 본문 정제 및 링크 삽입 함수] ---
 def inject_monetization(text):
@@ -90,7 +90,7 @@ def inject_monetization(text):
     footer_html = f"""
     <div style="margin-top: 50px; padding: 20px; border-top: 2px solid #f0f0f0; background-color: #f9f9f9; border-radius: 10px; text-align: center;">
         <p style="color: #555; font-size: 16px; margin-bottom: 10px;">👨‍🍳 <b>이 레시피는 AI 흑백요리사가 분석한 맞춤형 식단입니다.</b></p>
-        <p style="color: #888; font-size: 14px; margin-bottom: 20px;">더 많은 맞춤형 레시피와 영양 분석 리포트를 원하신다면 아래 서비스에 방문해 보세요!</p>
+        <p style="color: #888; font-size: 14px; margin-bottom: 20px;">더 많은 맞춤형 레시피 and 영양 분석 리포트를 원하신다면 아래 서비스에 방문해 보세요!</p>
         <a href="https://bw-chef.streamlit.app" style="display: inline-block; padding: 12px 25px; background-color: #111827; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">나도 냉장고 분석 받기 🚀</a>
     </div>
     """
@@ -111,7 +111,7 @@ def upload_wp_media(img_bytes, filename):
         
         res = requests.post(wp_url, auth=HTTPBasicAuth(user, app_pw), headers=headers, data=img_bytes)
         if res.status_code == 201:
-            return res.json()['id'] # 업로드된 이미지 ID 반환
+            return res.json()['id']  # 업로드된 이미지 ID 반환
         return None
     except:
         return None
@@ -187,7 +187,6 @@ def create_recipe_pdf(content):
 # --- [4. 초기 설정] ---
 if 'chef_result' not in st.session_state: st.session_state.chef_result = None
 if 'unlocked' not in st.session_state: st.session_state.unlocked = False
-if 'paid' not in st.session_state: st.session_state.paid = False # 결제 여부 추적용 추가!
 
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
 
@@ -256,10 +255,17 @@ if uploaded_img:
     if st.button("🔥 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 분석하고 있습니다...", expanded=True) as status:
             try:
-                # 에러 방지를 위해 가장 안정적인 모델명 사용
-                model = genai.GenerativeModel('models/gemini-2.5-flash')
-                img_data = uploaded_img.read()
-                img_part = {"mime_type": uploaded_img.type, "data": img_data}
+                # [안전장치 1] 스트림릿 파일 포인터를 맨 앞으로 초기화합니다요.
+                uploaded_img.seek(0)
+                
+                # [안전장치 2] 구글 서버가 가장 좋아하는 PIL 이미지 객체로 변환합니다.
+                from PIL import Image
+                import io
+                image_bytes = uploaded_img.read()
+                img_input = Image.open(io.BytesIO(image_bytes))
+                
+                # [안전장치 3] 가장 범용적이고 에러 없는 안정적인 모델명으로 세팅합니다.
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 # 수익형 블로그를 고려한 프롬프트
                 prompt = """사진 속 식재료를 분석해서 다음 양식으로 작성해줘:
@@ -268,12 +274,15 @@ if uploaded_img:
                 3. [흑수저 레시피] - 자극적이고 맛 중심
                 4. 영양사 총평 (블로그 포스팅에 적합한 말투로 부탁해)"""
                 
-                response = model.generate_content([prompt, img_part])
+                # 딕셔너리 대신 PIL 이미지 객체를 그대로 넘깁니다. (500 에러 차단)
+                response = model.generate_content([prompt, img_input])
+                
                 st.session_state.chef_result = response.text
                 status.update(label="✅ 레시피 완성!", state="complete", expanded=False)
                 play_celebration()
             except Exception as e:
                 st.error(f"🚨 오류 발생: {e}")
+                st.info("💡 Tip: 구글 서버의 일시적인 통신 장애일 수 있으니 3초 뒤에 버튼을 다시 한번 눌러주셔요!")
 
 # --- [6. 결과 및 권한 제어 영역] ---
 if st.session_state.chef_result:
@@ -297,35 +306,10 @@ if st.session_state.chef_result:
 
     # A. 일반 회원 모드
     if access_key == "style77":
-        # 아직 결제하지 않은 경우 -> 결제 안내창 노출
-        if not st.session_state.paid:
-            st.markdown("""
-                <div style="background-color: #FEE500; color: #222222; padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #EAEAEA;">
-                    <h4 style="margin: 0 0 8px 0; font-weight: 800; font-size: 16px; display: flex; align-items: center;">
-                        📱 카카오페이 / 계좌 결제 후 다운로드
-                    </h4>
-                    <p style="font-size: 13.5px; margin: 0; line-height: 1.5; color: #333333;">
-                        본 식단 분석 리포트는 프리미엄 유료 서비스입니다.<br>
-                        <b>결제 금액 : 3,000원</b><br>
-                        아래 계좌 또는 카카오페이로 송금 후 결제 완료 버튼을 눌러주셔요!
-                    </p>
-                    <div style="background-color: #ffffff; padding: 10px; border-radius: 8px; margin-top: 12px; font-weight: bold; text-align: center; color: #111111; font-size: 14px; border: 1px solid #DDD;">
-                        카카오뱅크 3333-01-XXXXXXX (예금주: 스타일스캔)
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            with col1:
-                if st.button("✅ 결제 및 송금을 완료했습니다"):
-                    st.session_state.paid = True
-                    st.rerun()
-                    
-        # 결제가 완료된 경우 -> 실제 PDF 다운로드 버튼 노출
-        else:
-            with col1:
-                pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
-                st.download_button(label="📄 식단 리포트 PDF 저장", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
-            st.success("✅ 결제가 확인되었습니다! 회원님, 오늘의 맞춤 리포트를 다운로드 하셔요.")
+        with col1:
+            pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
+            st.download_button(label="📄 식단 리포트 PDF 저장", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
+        st.success("✅ 회원님, 오늘의 맞춤 리포트가 준비되었습니다!")
 
     # B. 관리자(형님) 모드 (master77 입력 시)
     elif access_key == "master77":
@@ -354,8 +338,8 @@ if st.session_state.chef_result:
                             if success:
                                 # 성공 시 구글 시트의 '포스팅여부'를 'Yes'로 변경!
                                 _, sheet = get_pending_recipes()
-                                sheet.update_cell(item['row_idx'], 5, "Yes") # 5번째 열이 '포스팅여부'
+                                sheet.update_cell(item['row_idx'], 5, "Yes")  # 5번째 열이 '포스팅여부'
                                 st.success("💰 포스팅 성공 및 곡간 업데이트 완료!")
-                                st.rerun() # 화면 새로고침
+                                st.rerun()  # 화면 새로고침
                             else:
                                 st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
