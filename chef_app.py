@@ -57,10 +57,43 @@ def save_to_google_sheet(ingredients, title, content):
         print(f"시트 기록 실패: {e}")
         return False
 
-# --- [메인 로직 내 호출 부분 - 레시피 생성 완료 직후에 배치!] ---
-# (이미지 분석 로직 안에서 response.text를 받은 직후)
-# if st.session_state.chef_result:
-#     save_to_google_sheet(str(img_part), "AI 추천 레시피", st.session_state.chef_result)
+# --- [신규 추가: GitHub Issues 신청자 연동 함수 (구분선 장치 포함)] ---
+def save_to_github_issues(name, email, payment_method):
+    try:
+        # Streamlit Secrets에서 깃허브 정보 로드 (거북목 AI와 동일하게 연동 가능)
+        token = st.secrets["GITHUB_TOKEN"]
+        repo_owner = st.secrets["GITHUB_REPO_OWNER"]
+        repo_name = st.secrets["GITHUB_REPO_NAME"]
+        
+        url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/issues"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+        
+        # 거북목 AI와 혼동되지 않도록 말머리 및 구분 가이드라인 탑재
+        title = f"💳 [AI 흑백요리사] {name} 님 라이선스 사전 예약 ({payment_method})"
+        body = f"""### 👨‍🍳 AI 흑백요리사(영양사) 프리미엄 영구 라이선스 신청
+---
+- **신청자 성함:** {name}
+- **이메일 주소:** {email}
+- **선호 결제 수단:** {payment_method}
+- **신청 접수 시간:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+---
+*본 이슈는 'AI 흑백요리사' 앱의 결제 대기 폼을 통해 자동 생성되었습니다. 거북목 AI 데이터와 혼동하지 않도록 유의하셔요.*"""
+        
+        payload = {
+            "title": title,
+            "body": body,
+            "labels": ["bw-chef", "premium-license", "pending-payment"]
+        }
+        
+        res = requests.post(url, headers=headers, json=payload)
+        return res.status_code == 201
+    except Exception as e:
+        st.error(f"깃허브 전송 중 오류 발생: {e}")
+        return False
 
 # --- [1. 수익형 본문 정제 및 링크 삽입 함수] ---
 def inject_monetization(text):
@@ -232,11 +265,42 @@ st.markdown("""
         margin-bottom: 15px;
         font-size: 14px;
     }
+
+    /* 프리미엄 결제 박스 스타일 */
+    .premium-box {
+        background-color: #ffffff;
+        color: #1e293b;
+        padding: 25px;
+        border-radius: 15px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        margin-top: 25px;
+    }
+    .premium-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #1e3a8a;
+        margin-bottom: 5px;
+    }
+    .premium-price {
+        font-size: 16px;
+        color: #2563eb;
+        margin-bottom: 15px;
+    }
+    .premium-warning {
+        background-color: #fef3c7;
+        color: #92400e;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 20px;
+        border-left: 4px solid #f59e0b;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # --- [메인 헤더 및 상단 이미지 정렬 섹션] ---
-# 3개 컬럼을 만들어 중앙 컬럼에 이미지를 넣음으로써 정확히 가운데 정렬을 수행합니다.
 img_bot_col1, img_bot_col2, img_bot_col3 = st.columns([1, 8, 1])
 with img_bot_col2:
     if os.path.exists("chef2.png"):
@@ -256,12 +320,10 @@ if uploaded_img:
     if st.button("🔥 레시피 대결 시작!"):
         with st.status("👨‍🍳 셰프들이 재료를 분석하고 있습니다...", expanded=True) as status:
             try:
-                # 에러 방지를 위해 가장 안정적인 모델명 사용
                 model = genai.GenerativeModel('models/gemini-2.5-flash')
                 img_data = uploaded_img.read()
                 img_part = {"mime_type": uploaded_img.type, "data": img_data}
                 
-                # 수익형 블로그를 고려한 프롬프트
                 prompt = """사진 속 식재료를 분석해서 다음 양식으로 작성해줘:
                 1. 분석된 식재료 리스트
                 2. [백수저 레시피] - 건강과 영양 중심
@@ -282,7 +344,7 @@ if st.session_state.chef_result:
     st.write(st.session_state.chef_result)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # 📢 네이버 카페 가입 유도 안내 (형님이 요청하신 문구!)
+    # 📢 네이버 카페 가입 유도 안내
     st.markdown(f"""
         <div class="cafe-notice">
             📢 <b>비밀번호 발급 안내</b><br>
@@ -297,7 +359,6 @@ if st.session_state.chef_result:
 
     # A. 일반 회원 모드
     if access_key == "style77":
-        # 아직 결제하지 않은 경우 -> 결제 안내창 노출
         if not st.session_state.paid:
             st.markdown("""
                 <div style="background-color: #FEE500; color: #222222; padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #EAEAEA;">
@@ -320,7 +381,6 @@ if st.session_state.chef_result:
                     st.session_state.paid = True
                     st.rerun()
                     
-        # 결제가 완료된 경우 -> 실제 PDF 다운로드 버튼 노출
         else:
             with col1:
                 pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
@@ -331,31 +391,54 @@ if st.session_state.chef_result:
     elif access_key == "master77":
         st.warning("😎 관리자 전용: 콘텐츠 곡간(구글 시트) 관리 모드")
         
-        # 1. 시트에서 목록 불러오기 버튼
         if st.button("📦 곡간에서 미발행 레시피 불러오기"):
             pending_list, sheet = get_pending_recipes()
             st.session_state.pending_recipes = pending_list
             st.success(f"총 {len(pending_list)}개의 새 레시피를 찾았습니다요!")
 
-        # 2. 불러온 목록이 있다면 화면에 출력
         if 'pending_recipes' in st.session_state and st.session_state.pending_recipes:
             for idx, item in enumerate(st.session_state.pending_recipes):
                 with st.expander(f"📌 [{item['날짜']}] {item['레시피제목']}"):
                     st.write(f"**분석된 재료:** {item['분석된재료']}")
                     st.markdown("---")
-                    # 수정 가능한 제목과 본문
                     new_title = st.text_input(f"제목 수정 ({idx})", value=item['레시피제목'], key=f"title_{idx}")
                     new_content = st.text_area(f"본문 수정 ({idx})", value=item['레시피내용'], height=200, key=f"content_{idx}")
                     
                     if st.button(f"🚀 이 글 바로 포스팅하기 ({idx})", key=f"btn_{idx}"):
                         with st.spinner("워드프레스 전송 및 시트 업데이트 중..."):
-                            # 워드프레스 포스팅 실행 (썸네일은 일단 생략하거나 기본값 사용)
                             success = post_to_wordpress_pro(new_title, new_content, None) 
                             if success:
-                                # 성공 시 구글 시트의 '포스팅여부'를 'Yes'로 변경!
                                 _, sheet = get_pending_recipes()
-                                sheet.update_cell(item['row_idx'], 5, "Yes") # 5번째 열이 '포스팅여부'
+                                sheet.update_cell(item['row_idx'], 5, "Yes")
                                 st.success("💰 포스팅 성공 및 곡간 업데이트 완료!")
-                                st.rerun() # 화면 새로고침
+                                st.rerun()
                             else:
                                 st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
+
+    # C. 프리미엄 영구 라이선스 신청 양식 (비밀번호 오답 또는 입력 전 상태에 항상 노출)
+    if access_key not in ["style77", "master77"]:
+        st.markdown("""
+            <div class="premium-box">
+                <div class="premium-title">💳 프리미엄 영구 라이선스</div>
+                <div class="premium-price">정가 39,000원 ➜ <b>특별가: 19,000원 (얼리버드 한정)</b></div>
+                <div class="premium-warning">⚠️ 현재 선착순 할인 수량이 마감 임박입니다.</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        with st.container():
+            p_name = st.text_input("성함", placeholder="홍길동", key="premium_name")
+            p_email = st.text_input("이메일 주소", placeholder="example@email.com", key="premium_email")
+            p_method = st.radio("선호 결제 수단", ["카카오(송금)", "신용카드", "계좌이체"], key="premium_method")
+            
+            if st.button("🚀 사전 예약 및 결제 대기 등록"):
+                if not p_name.strip() or not p_email.strip():
+                    st.error("❌ 성함과 이메일 주소를 모두 입력해 주셔요!")
+                elif "@" not in p_email:
+                    st.error("❌ 올바른 이메일 형식이 아닙니다.")
+                else:
+                    with st.spinner("깃허브 저장소에 예약자 정보를 기록하고 있습니다..."):
+                        success = save_to_github_issues(p_name, p_email, p_method)
+                        if success:
+                            st.success(f"🎉 {p_name}님, 사전 예약 신청이 완료되었습니다! 확인 후 메일로 안내해 드릴게요.")
+                        else:
+                            st.error("❌ 등록에 실패했습니다. 관리자 Secrets 세팅을 확인해 주셔요.")
