@@ -57,10 +57,9 @@ def save_to_google_sheet(ingredients, title, content):
         print(f"시트 기록 실패: {e}")
         return False
 
-# --- [신규 추가: GitHub Issues 신청자 연동 함수 (구분선 장치 포함)] ---
-def save_to_github_issues(name, email, payment_method):
+# --- [GitHub Issues 구독 예약자 연동 함수] ---
+def save_to_github_issues(email):
     try:
-        # Streamlit Secrets에서 깃허브 정보 로드 (거북목 AI와 동일하게 연동 가능)
         token = st.secrets["GITHUB_TOKEN"]
         repo_owner = st.secrets["GITHUB_REPO_OWNER"]
         repo_name = st.secrets["GITHUB_REPO_NAME"]
@@ -72,21 +71,20 @@ def save_to_github_issues(name, email, payment_method):
             "X-GitHub-Api-Version": "2022-11-28"
         }
         
-        # 거북목 AI와 혼동되지 않도록 말머리 및 구분 가이드라인 탑재
-        title = f"💳 [AI 흑백요리사] {name} 님 라이선스 사전 예약 ({payment_method})"
-        body = f"""### 👨‍🍳 AI 흑백요리사(영양사) 프리미엄 영구 라이선스 신청
+        # 다른 서비스와 섞이지 않도록 명확한 구분 타이틀 및 본문 세팅
+        title = f"🚀 [AI 흑백요리사 Pro] 월 구독 사전 예약 신청 ({email})"
+        body = f"""### 👨‍🍳 AI 흑백요리사 Pro 월 구독 사전 예약
 ---
-- **신청자 성함:** {name}
-- **이메일 주소:** {email}
-- **선호 결제 수단:** {payment_method}
-- **신청 접수 시간:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+- **혜택을 받으실 이메일:** {email}
+- **신청 상품:** 월 9,900원 요금제 (사전 예약 50% 할인 대상)
+- **접수 시간:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 ---
-*본 이슈는 'AI 흑백요리사' 앱의 결제 대기 폼을 통해 자동 생성되었습니다. 거북목 AI 데이터와 혼동하지 않도록 유의하셔요.*"""
+*본 이슈는 'AI 흑백요리사' 솔라매니저 스타일 구독 폼을 통해 자동 생성되었습니다.*"""
         
         payload = {
             "title": title,
             "body": body,
-            "labels": ["bw-chef", "premium-license", "pending-payment"]
+            "labels": ["bw-chef-pro", "subscription-pre-order"]
         }
         
         res = requests.post(url, headers=headers, json=payload)
@@ -220,7 +218,7 @@ def create_recipe_pdf(content):
 # --- [4. 초기 설정] ---
 if 'chef_result' not in st.session_state: st.session_state.chef_result = None
 if 'unlocked' not in st.session_state: st.session_state.unlocked = False
-if 'paid' not in st.session_state: st.session_state.paid = False # 결제 여부 추적용 추가!
+if 'paid' not in st.session_state: st.session_state.paid = False 
 
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
 
@@ -266,36 +264,36 @@ st.markdown("""
         font-size: 14px;
     }
 
-    /* 프리미엄 결제 박스 스타일 */
-    .premium-box {
+    /* 솔라매니저 스타일: 상단 Pro 시작 버튼 컴포넌트 */
+    .sol-pro-badge {
+        display: inline-block;
         background-color: #ffffff;
-        color: #1e293b;
-        padding: 25px;
-        border-radius: 15px;
+        color: #333333;
         border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        margin-top: 25px;
-    }
-    .premium-title {
-        font-size: 20px;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 14px;
         font-weight: bold;
-        color: #1e3a8a;
-        margin-bottom: 5px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .premium-price {
-        font-size: 16px;
-        color: #2563eb;
+    /* 솔라매니저 스타일: 파란색 사전 예약 안내 문구 */
+    .sol-notice-box {
+        background-color: #ebf5ff;
+        color: #1e40af;
+        padding: 14px 18px;
+        border-radius: 8px;
+        font-size: 14.5px;
+        font-weight: 500;
         margin-bottom: 15px;
     }
-    .premium-warning {
-        background-color: #fef3c7;
-        color: #92400e;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 20px;
-        border-left: 4px solid #f59e0b;
+    /* 박스 테두리 컨테이너 */
+    .sol-form-container {
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #ffffff;
+        color: #333333;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -415,30 +413,35 @@ if st.session_state.chef_result:
                             else:
                                 st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
 
-    # C. 프리미엄 영구 라이선스 신청 양식 (비밀번호 오답 또는 입력 전 상태에 항상 노출)
+    # C. ✨ 신규: 솔라매니저 AI 스타일 월 구독형 사전 예약 UI (2.png 반영)
     if access_key not in ["style77", "master77"]:
-        st.markdown("""
-            <div class="premium-box">
-                <div class="premium-title">💳 프리미엄 영구 라이선스</div>
-                <div class="premium-price">정가 39,000원 ➜ <b>특별가: 19,000원 (얼리버드 한정)</b></div>
-                <div class="premium-warning">⚠️ 현재 선착순 할인 수량이 마감 임박입니다.</div>
-            </div>
-        """, unsafe_allow_html=True)
+        # 1. 상단 배지 노출
+        st.markdown('<div class="sol-pro-badge">월 9,900원에 Pro 시작하기</div>', unsafe_allow_html=True)
         
+        # 2. 파란색 알림 박스 노출
+        st.markdown('<div class="sol-notice-box">현재 Pro 버전은 사전 예약 중입니다. 특별 혜택을 놓치지 마세요!</div>', unsafe_allow_html=True)
+        
+        # 3. 이메일 전용 입력 테두리 컨테이너 폼
         with st.container():
-            p_name = st.text_input("성함", placeholder="홍길동", key="premium_name")
-            p_email = st.text_input("이메일 주소", placeholder="example@email.com", key="premium_email")
-            p_method = st.radio("선호 결제 수단", ["카카오(송금)", "신용카드", "계좌이체"], key="premium_method")
+            st.markdown('<div style="color: #333333; font-weight: 500; font-size: 14px; margin-bottom: 5px;">혜택을 받으실 이메일</div>', unsafe_allow_html=True)
+            p_email = st.text_input("혜택을 받으실 이메일", placeholder="example@email.com", key="premium_email", label_visibility="collapsed")
             
-            if st.button("🚀 사전 예약 및 결제 대기 등록"):
-                if not p_name.strip() or not p_email.strip():
-                    st.error("❌ 성함과 이메일 주소를 모두 입력해 주셔요!")
+            st.markdown('<div style="margin-top: 10px;"></div>', unsafe_allow_html=True)
+            
+            if st.button("사전 예약하고 50% 할인받기"):
+                if not p_email.strip():
+                    st.error("❌ 이메일 주소를 입력해 주셔요!")
                 elif "@" not in p_email:
                     st.error("❌ 올바른 이메일 형식이 아닙니다.")
                 else:
-                    with st.spinner("깃허브 저장소에 예약자 정보를 기록하고 있습니다..."):
-                        success = save_to_github_issues(p_name, p_email, p_method)
+                    with st.spinner("예약 신청 정보를 전송 중입니다..."):
+                        success = save_to_github_issues(p_email)
                         if success:
-                            st.success(f"🎉 {p_name}님, 사전 예약 신청이 완료되었습니다! 확인 후 메일로 안내해 드릴게요.")
+                            # 2.png와 똑같은 형태의 초록색 완료 배지 효과 디자인
+                            st.markdown("""
+                                <div style="background-color: #e6f4ea; color: #137333; padding: 12px; border-radius: 6px; font-weight: bold; margin-top: 15px; font-size: 15px;">
+                                    ✅ 예약 완료!
+                                </div>
+                            """, unsafe_allow_html=True)
                         else:
-                            st.error("❌ 등록에 실패했습니다. 관리자 Secrets 세팅을 확인해 주셔요.")
+                            st.error("❌ 등록에 실패했습니다. 관리자 Secrets 세팅(GITHUB_TOKEN 등)을 확인해 주셔요.")
