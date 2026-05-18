@@ -234,8 +234,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- [메인 헤더 섹션] ---
-st.markdown('<div style="text-align: center; padding: 2rem 0;">', unsafe_allow_html=True)
+# --- [메인 헤더 및 상단 이미지 정렬 섹션] ---
+# 3개 컬럼을 만들어 중앙 컬럼에 이미지를 넣음으로써 정확히 가운데 정렬을 수행합니다.
+img_bot_col1, img_bot_col2, img_bot_col3 = st.columns([1, 8, 1])
+with img_bot_col2:
+    if os.path.exists("chef2.png"):
+        st.image("chef2.png", use_container_width=True)
+    else:
+        st.image("chef2.png", use_container_width=True)
+
+st.markdown('<div style="text-align: center; padding: 1rem 0;">', unsafe_allow_html=True)
 st.markdown('<h1 style="font-size: 2.5rem; font-weight: 800; color: #475569;">👨‍🍳 AI 흑백요리사(영양사)</h1>', unsafe_allow_html=True)
 st.markdown('<p style="color: #94a3b8; font-size: 1.1rem;">당신의 냉장고 사진 한 장으로 시작되는 미식 대결</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
