@@ -71,7 +71,6 @@ def save_to_github_issues(email):
             "X-GitHub-Api-Version": "2022-11-28"
         }
         
-        # 다른 서비스와 섞이지 않도록 명확한 구분 타이틀 및 본문 세팅
         title = f"🚀 [AI 흑백요리사 Pro] 월 구독 사전 예약 신청 ({email})"
         body = f"""### 👨‍🍳 AI 흑백요리사 Pro 월 구독 사전 예약
 ---
@@ -194,31 +193,8 @@ def play_celebration():
     """
     components.html(confetti_js, height=1)
 
-# --- [3. PDF 생성기] ---
-def create_recipe_pdf(content):
-    def clean_text(text): return re.sub(r'\*\*|\*|__|#', '', text).strip()
-    pdf = FPDF()
-    pdf.add_page()
-    font_path = "NanumGothic.ttf"
-    if os.path.exists(font_path):
-        pdf.add_font('Nanum', '', font_path)
-        pdf.set_font('Nanum', '', 12)
-    else: pdf.set_font("Arial", size=12)
-    
-    # 헤더 디자인
-    pdf.set_fill_color(17, 24, 39); pdf.rect(0, 0, 210, 40, 'F')
-    pdf.set_text_color(255, 255, 255); pdf.set_font(pdf.font_family, size=20)
-    pdf.text(15, 25, "AI BLACK & WHITE CHEF REPORT")
-    
-    # 본문
-    pdf.set_y(50); pdf.set_text_color(31, 41, 55); pdf.set_font(pdf.font_family, size=11)
-    pdf.multi_cell(0, 8, txt=clean_text(content))
-    return pdf.output()
-
 # --- [4. 초기 설정] ---
 if 'chef_result' not in st.session_state: st.session_state.chef_result = None
-if 'unlocked' not in st.session_state: st.session_state.unlocked = False
-if 'paid' not in st.session_state: st.session_state.paid = False 
 
 st.set_page_config(page_title="AI 흑백요리사", page_icon="👨‍🍳", layout="centered")
 
@@ -252,17 +228,6 @@ st.markdown("""
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         margin-bottom: 2rem;
     }
-    
-    /* 네이버 카페 안내 박스 */
-    .cafe-notice {
-        background-color: #064e3b;
-        color: #ecfdf5;
-        padding: 15px;
-        border-radius: 8px;
-        border-left: 5px solid #10b981;
-        margin-bottom: 15px;
-        font-size: 14px;
-    }
 
     /* 솔라매니저 스타일: 상단 Pro 시작 버튼 컴포넌트 */
     .sol-pro-badge {
@@ -287,24 +252,18 @@ st.markdown("""
         font-weight: 500;
         margin-bottom: 15px;
     }
-    /* 박스 테두리 컨테이너 */
-    .sol-form-container {
-        border: 1px solid #e2e8f0;
-        padding: 20px;
-        border-radius: 10px;
-        background-color: #ffffff;
-        color: #333333;
-    }
     </style>
 """, unsafe_allow_html=True)
+
+# --- [마스터 계정 진입용 쿼리 파라미터 제어 (히든 메뉴)] ---
+# URL 뒤에 ?mode=admin 을 붙이면 관리자 모드로 곡간 관리가 가능합니다 형님!
+query_params = st.query_params
+is_admin = query_params.get("mode") == "admin"
 
 # --- [메인 헤더 및 상단 이미지 정렬 섹션] ---
 img_bot_col1, img_bot_col2, img_bot_col3 = st.columns([1, 8, 1])
 with img_bot_col2:
-    if os.path.exists("chef2.png"):
-        st.image("chef2.png", use_container_width=True)
-    else:
-        st.image("chef2.png", use_container_width=True)
+    st.image("chef2.png", use_container_width=True)
 
 st.markdown('<div style="text-align: center; padding: 1rem 0;">', unsafe_allow_html=True)
 st.markdown('<h1 style="font-size: 2.5rem; font-weight: 800; color: #475569;">👨‍🍳 AI 흑백요리사(영양사)</h1>', unsafe_allow_html=True)
@@ -335,113 +294,68 @@ if uploaded_img:
             except Exception as e:
                 st.error(f"🚨 오류 발생: {e}")
 
-# --- [6. 결과 및 권한 제어 영역] ---
+# --- [6. 결과 출력 및 솔라매니저 구독 사전 예약 폼 영역] ---
 if st.session_state.chef_result:
     st.markdown('<div class="report-card">', unsafe_allow_html=True)
     st.subheader("🏁 AI 셰프들의 요리 제안")
     st.write(st.session_state.chef_result)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # 📢 네이버 카페 가입 유도 안내
-    st.markdown(f"""
-        <div class="cafe-notice">
-            📢 <b>비밀번호 발급 안내</b><br>
-            <a href="https://cafe.naver.com/stylely" target="_blank" style="color: #6ee7b7; text-decoration: underline;">네이버 카페 '스타일리'</a>에 가입하시면 PDF 리포트 다운로드를 위한 비밀번호를 바로 확인(공지 참조)하실 수 있습니다!
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
     
-    # 🔑 비밀번호 입력창
-    access_key = st.text_input("🔑 서비스 코드 입력", type="password", placeholder="카페에서 확인한 코드를 입력해 주세요")
-
-    col1, col2 = st.columns(2)
-
-    # A. 일반 회원 모드
-    if access_key == "style77":
-        if not st.session_state.paid:
-            st.markdown("""
-                <div style="background-color: #FEE500; color: #222222; padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #EAEAEA;">
-                    <h4 style="margin: 0 0 8px 0; font-weight: 800; font-size: 16px; display: flex; align-items: center;">
-                        📱 카카오페이 / 계좌 결제 후 다운로드
-                    </h4>
-                    <p style="font-size: 13.5px; margin: 0; line-height: 1.5; color: #333333;">
-                        본 식단 분석 리포트는 프리미엄 유료 서비스입니다.<br>
-                        <b>결제 금액 : 3,000원</b><br>
-                        아래 계좌 또는 카카오페이로 송금 후 결제 완료 버튼을 눌러주셔요!
-                    </p>
-                    <div style="background-color: #ffffff; padding: 10px; border-radius: 8px; margin-top: 12px; font-weight: bold; text-align: center; color: #111111; font-size: 14px; border: 1px solid #DDD;">
-                        카카오뱅크 3333-01-0447508 (예금주: 이병서)
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            with col1:
-                if st.button("✅ 결제 및 송금을 완료했습니다"):
-                    st.session_state.paid = True
-                    st.rerun()
-                    
-        else:
-            with col1:
-                pdf_bytes = create_recipe_pdf(st.session_state.chef_result)
-                st.download_button(label="📄 식단 리포트 PDF 저장", data=bytes(pdf_bytes), file_name="Chef_Report.pdf", mime="application/pdf")
-            st.success("✅ 결제가 확인되었습니다! 회원님, 오늘의 맞춤 리포트를 다운로드 하셔요.")
-
-    # B. 관리자(형님) 모드 (master77 입력 시)
-    elif access_key == "master77":
-        st.warning("😎 관리자 전용: 콘텐츠 곡간(구글 시트) 관리 모드")
+    # 🌟 솔라매니저 AI 스타일 월 구독형 사전 예약 UI (2.png 단독 반영)
+    st.markdown('<div class="sol-pro-badge">월 9,900원에 Pro 시작하기</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sol-notice-box">현재 Pro 버전은 사전 예약 중입니다. 특별 혜택을 놓치지 마세요!</div>', unsafe_allow_html=True)
+    
+    with st.container():
+        st.markdown('<div style="color: #f8fafc; font-weight: 500; font-size: 14px; margin-bottom: 5px;">혜택을 받으실 이메일</div>', unsafe_allow_html=True)
+        p_email = st.text_input("혜택을 받으실 이메일", placeholder="example@email.com", key="premium_email", label_visibility="collapsed")
         
-        if st.button("📦 곡간에서 미발행 레시피 불러오기"):
-            pending_list, sheet = get_pending_recipes()
-            st.session_state.pending_recipes = pending_list
-            st.success(f"총 {len(pending_list)}개의 새 레시피를 찾았습니다요!")
-
-        if 'pending_recipes' in st.session_state and st.session_state.pending_recipes:
-            for idx, item in enumerate(st.session_state.pending_recipes):
-                with st.expander(f"📌 [{item['날짜']}] {item['레시피제목']}"):
-                    st.write(f"**분석된 재료:** {item['분석된재료']}")
-                    st.markdown("---")
-                    new_title = st.text_input(f"제목 수정 ({idx})", value=item['레시피제목'], key=f"title_{idx}")
-                    new_content = st.text_area(f"본문 수정 ({idx})", value=item['레시피내용'], height=200, key=f"content_{idx}")
-                    
-                    if st.button(f"🚀 이 글 바로 포스팅하기 ({idx})", key=f"btn_{idx}"):
-                        with st.spinner("워드프레스 전송 및 시트 업데이트 중..."):
-                            success = post_to_wordpress_pro(new_title, new_content, None) 
-                            if success:
-                                _, sheet = get_pending_recipes()
-                                sheet.update_cell(item['row_idx'], 5, "Yes")
-                                st.success("💰 포스팅 성공 및 곡간 업데이트 완료!")
-                                st.rerun()
-                            else:
-                                st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
-
-    # C. ✨ 신규: 솔라매니저 AI 스타일 월 구독형 사전 예약 UI (2.png 반영)
-    if access_key not in ["style77", "master77"]:
-        # 1. 상단 배지 노출
-        st.markdown('<div class="sol-pro-badge">월 9,900원에 Pro 시작하기</div>', unsafe_allow_html=True)
+        st.markdown('<div style="margin-top: 10px;"></div>', unsafe_allow_html=True)
         
-        # 2. 파란색 알림 박스 노출
-        st.markdown('<div class="sol-notice-box">현재 Pro 버전은 사전 예약 중입니다. 특별 혜택을 놓치지 마세요!</div>', unsafe_allow_html=True)
-        
-        # 3. 이메일 전용 입력 테두리 컨테이너 폼
-        with st.container():
-            st.markdown('<div style="color: #333333; font-weight: 500; font-size: 14px; margin-bottom: 5px;">혜택을 받으실 이메일</div>', unsafe_allow_html=True)
-            p_email = st.text_input("혜택을 받으실 이메일", placeholder="example@email.com", key="premium_email", label_visibility="collapsed")
-            
-            st.markdown('<div style="margin-top: 10px;"></div>', unsafe_allow_html=True)
-            
-            if st.button("사전 예약하고 50% 할인받기"):
-                if not p_email.strip():
-                    st.error("❌ 이메일 주소를 입력해 주셔요!")
-                elif "@" not in p_email:
-                    st.error("❌ 올바른 이메일 형식이 아닙니다.")
-                else:
-                    with st.spinner("예약 신청 정보를 전송 중입니다..."):
-                        success = save_to_github_issues(p_email)
+        if st.button("사전 예약하고 50% 할인받기"):
+            if not p_email.strip():
+                st.error("❌ 이메일 주소를 입력해 주셔요!")
+            elif "@" not in p_email:
+                st.error("❌ 올바른 이메일 형식이 아닙니다.")
+            else:
+                with st.spinner("예약 신청 정보를 전송 중입니다..."):
+                    success = save_to_github_issues(p_email)
+                    if success:
+                        st.markdown("""
+                            <div style="background-color: #e6f4ea; color: #137333; padding: 12px; border-radius: 6px; font-weight: bold; margin-top: 15px; font-size: 15px;">
+                                ✅ 예약 완료!
+                            </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.error("❌ 등록에 실패했습니다. 관리자 Secrets 세팅(GITHUB_TOKEN 등)을 확인해 주셔요.")
+
+# --- [7. 히든 관리자 모드 메뉴] ---
+# 형님이 워드프레스/곡간 관리를 하실 때는 서비스 주소 뒤에 ?mode=admin 을 붙여서 접속하시면 입력창 없이 바로 뜹니다!
+if is_admin:
+    st.markdown("---")
+    st.warning("😎 관리자 전용: 콘텐츠 곡간(구글 시트) 관리 모드")
+    
+    if st.button("📦 곡간에서 미발행 레시피 불러오기"):
+        pending_list, sheet = get_pending_recipes()
+        st.session_state.pending_recipes = pending_list
+        st.success(f"총 {len(pending_list)}개의 새 레시피를 찾았습니다요!")
+
+    if 'pending_recipes' in st.session_state and st.session_state.pending_recipes:
+        for idx, item in enumerate(st.session_state.pending_recipes):
+            with st.expander(f"📌 [{item['날짜']}] {item['레시피제목']}"):
+                st.write(f"**분석된 재료:** {item['분석된재료']}")
+                st.markdown("---")
+                new_title = st.text_input(f"제목 수정 ({idx})", value=item['레시피제목'], key=f"title_{idx}")
+                new_content = st.text_area(f"본문 수정 ({idx})", value=item['레시피내용'], height=200, key=f"content_{idx}")
+                
+                if st.button(f"🚀 이 글 바로 포스팅하기 ({idx})", key=f"btn_{idx}"):
+                    with st.spinner("워드프레스 전송 및 시트 업데이트 중..."):
+                        success = post_to_wordpress_pro(new_title, new_content, None) 
                         if success:
-                            # 2.png와 똑같은 형태의 초록색 완료 배지 효과 디자인
-                            st.markdown("""
-                                <div style="background-color: #e6f4ea; color: #137333; padding: 12px; border-radius: 6px; font-weight: bold; margin-top: 15px; font-size: 15px;">
-                                    ✅ 예약 완료!
-                                </div>
-                            """, unsafe_allow_html=True)
+                            _, sheet = get_pending_recipes()
+                            sheet.update_cell(item['row_idx'], 5, "Yes")
+                            st.success("💰 포스팅 성공 및 곡간 업데이트 완료!")
+                            st.rerun()
                         else:
-                            st.error("❌ 등록에 실패했습니다. 관리자 Secrets 세팅(GITHUB_TOKEN 등)을 확인해 주셔요.")
+                            st.error("❌ 포스팅 실패. 로그를 확인하셔요.")
